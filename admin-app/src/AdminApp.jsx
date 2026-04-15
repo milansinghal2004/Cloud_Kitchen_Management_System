@@ -105,7 +105,8 @@ export function AdminApp() {
   }, [activeOrder, itemChefMap, adminKey, apiBase, statusFilter, orderSearch, ticketStatus, ticketSearch]);
 
   async function resolveApiBase() {
-    const uniqueCandidates = [...new Set([window.location.origin, "http://localhost:3001", "http://localhost:3000"])];
+    const envBase = import.meta.env.VITE_API_BASE;
+    const uniqueCandidates = [...new Set([envBase, window.location.origin, "http://localhost:3001", "http://localhost:3000"].filter(Boolean))];
     for (const base of uniqueCandidates) {
       try {
         const res = await fetch(`${base}/api/admin/tickets`, {

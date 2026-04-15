@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: ck-project-backend
+    env: node
+    plan: free
+    autoDeploy: true
+    buildCommand: npm install
+    startCommand: npm run start:db
+    healthCheckPath: /api/menu
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_KEY
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PAYMENT_PROVIDER
+        sync: false
+      - key: PAYMENT_CURRENCY
+        value: INR
+      - key: UPI_RECEIVER_VPA
+        sync: false
+      - key: UPI_RECEIVER_NAME
+        sync: false

@@ -1,7 +1,29 @@
 [build]
-  command = "npm run customer:build"
-  publish = "customer-app/dist"
+  command = "npm run customer:build && npm run admin:build"
+  publish = "public"
 
 [build.environment]
   # Prevent false positives for non-secret config labels that are expected in source/build output.
   SECRETS_SCAN_OMIT_KEYS = "PAYMENT_PROVIDER,UPI_RECEIVER_NAME,ADMIN_USERNAME,PORT"
+
+[[redirects]]
+  from = "/customer-react/*"
+  to = "/customer-react/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin-react/*"
+  to = "/admin-react/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://YOUR-BACKEND-DOMAIN/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/assets/*"
+  to = "https://YOUR-BACKEND-DOMAIN/assets/:splat"
+  status = 200
+  force = true
