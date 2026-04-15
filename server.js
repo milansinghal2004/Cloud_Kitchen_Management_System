@@ -46,7 +46,7 @@ function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, x-admin-key",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS"
   });
   res.end(JSON.stringify(payload));
@@ -224,6 +224,9 @@ async function handleApi(req, res, urlObj) {
     readJson(DATA_FILES.orders, [])
   ]);
 
+  const adminKeyHeader = String(req.headers["x-admin-key"] || "");
+  const isAdmin = adminKeyHeader === getAdminKey();
+
   if (method === "GET" && pathname === "/api/events") {
     const sessionId = String(urlObj.searchParams.get("sessionId") || "").trim();
     if (!sessionId) return sendError(res, 400, "sessionId is required.");
@@ -333,6 +336,72 @@ async function handleApi(req, res, urlObj) {
       admin: { username },
       adminKey: process.env.ADMIN_KEY || "dev-admin-key-change-me"
     });
+  }
+
+  // Admin dashboard endpoints (JSON-mode backend)
+  if (method === "GET" && pathname === "/api/admin/overview") {
+    if (!isAdmin) return sendError(res, 401, "Invalid admin key.");
+    const enriched = orders.map(enrichOrder);
+    const total_orders = enriched.length;
+    const active_orders = enriched.filter((o) => ["Confirmed", "Preparing", "Out for Delivery"].includes(o.status)).length;
+    const delivered_orders = enriched.filter((o) => o.status === "Delivered").length;
+    const cancelled_orders = enriched.filter((o) => o.status === "Cancelled").length;
+    const pending_payments = enriched.filter((o) => String(o.paymentStatus || "").toLowerCase() === "pending").length;
+    const gross_revenue = enriched.reduce((sum, o) => sum + Number(o.pricing?.total || 0), 0);
+    return sendJson(res, 200, {
+      ok: true,
+      metrics: {
+        total_orders,
+        active_orders,
+        delivered_orders,
+        cancelled_orders,
+        pending_payments,
+        pending_verifications: 0,
+        gross_revenue,
+        total_chefs: 0,
+        on_duty_chefs: 0,
+        open_tickets: 0
+      }
+    });
+  }
+
+  if (method === "GET" && pathname === "/api/admin/orders") {
+    if (!isAdmin) return sendError(res, 401, "Invalid admin key.");
+    const statusFilter = String(urlObj.searchParams.get("status") || "").trim();
+    const search = String(urlObj.searchParams.get("search") || "").trim().toLowerCase();
+    const list = orders
+      .map(enrichOrder)
+      .filter((o) => {
+        if (statusFilter && o.status !== statusFilter) return false;
+        if (!search) return true;
+        const hay = `${o.id} ${o.customer?.name || ""} ${o.customer?.phone || ""}`.toLowerCase();
+        return hay.includes(search);
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 100)
+      .map((o) => ({
+        id: o.id,
+        status: o.status,
+        paymentStatus: o.paymentStatus || "Pending",
+        customerName: o.customer?.name || "",
+        customerPhone: o.customer?.phone || "",
+        total: Number(o.pricing?.total || 0),
+        createdAt: o.createdAt,
+        assignedChef: null,
+        totalItems: Array.isArray(o.items) ? o.items.length : 0,
+        assignedItems: 0
+      }));
+    return sendJson(res, 200, { ok: true, orders: list });
+  }
+
+  if (method === "GET" && pathname === "/api/admin/chefs") {
+    if (!isAdmin) return sendError(res, 401, "Invalid admin key.");
+    return sendJson(res, 200, { ok: true, chefs: [] });
+  }
+
+  if (method === "GET" && pathname === "/api/admin/tickets") {
+    if (!isAdmin) return sendError(res, 401, "Invalid admin key.");
+    return sendJson(res, 200, { ok: true, tickets: [] });
   }
 
   if (method === "GET" && pathname === "/api/cart") {
@@ -731,7 +800,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, x-admin-key",
       "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS"
     });
     return res.end();

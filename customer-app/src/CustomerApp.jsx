@@ -338,6 +338,8 @@ export function CustomerApp() {
       setShowCart(false);
       await Promise.all([loadCart(), loadOrders()]);
       navigate("/orders");
+    } catch (error) {
+      flash(error?.message || "Checkout failed. Please try again.");
     } finally {
       setIsPaying(false);
     }
