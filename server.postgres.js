@@ -1026,11 +1026,14 @@ async function handleApi(req, res, urlObj) {
 
     const order = await queryOne("SELECT * FROM orders WHERE id = $1", [orderId]);
     if (!order) return sendError(res, 404, "Order not found.");
+    if (String(order.status || "").toLowerCase() === "cancelled") {
+      return sendError(res, 409, "Cancelled orders cannot accept payment proofs.");
+    }
     if (String(order.payment_status || "").toLowerCase() === "paid") {
       return sendJson(res, 200, { ok: true, alreadyPaid: true, paymentStatus: "Paid", orderId });
     }
 
-    const txn = await queryOne(
+    let txn = await queryOne(
       "SELECT * FROM payment_transactions WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1",
       [orderId]
     );
@@ -1060,6 +1063,28 @@ async function handleApi(req, res, urlObj) {
         [utr, orderId]
       );
       if (duplicate) return sendError(res, 409, "This UTR/reference is already used for another order.");
+
+      // If the last attempt was rejected/failed, create a fresh transaction so the customer can resubmit proof
+      // until it is accepted or the order is cancelled.
+      const lastStatus = String(txn.status || "").trim().toLowerCase();
+      if (lastStatus && lastStatus !== "pending" && lastStatus !== "submitted") {
+        const txnId = makeId("pay");
+        await pool.query(
+          `INSERT INTO payment_transactions
+           (id, order_id, provider, amount, currency, status, metadata)
+           VALUES ($1,$2,$3,$4,$5,'pending',$6::jsonb)`,
+          [
+            txnId,
+            orderId,
+            "upi_qr",
+            Number(order.total || 0),
+            PAYMENT_CURRENCY,
+            JSON.stringify({ mode: order.payment_mode, resubmission: true, previousTxnId: txn.id, createdAt: new Date().toISOString() })
+          ]
+        );
+        txn = await queryOne("SELECT * FROM payment_transactions WHERE id = $1", [txnId]);
+      }
+
       await pool.query("UPDATE orders SET payment_status = 'Verification Pending', payment_ref = $2 WHERE id = $1", [orderId, utr]);
       await pool.query(
         "UPDATE payment_transactions SET status = 'submitted', gateway_payment_id = $2, metadata = COALESCE(metadata, '{}'::jsonb) || $3::jsonb WHERE id = $1",
@@ -1367,6 +1392,8 @@ async function handleApi(req, res, urlObj) {
       "UPDATE payment_transactions SET status = 'failed', metadata = COALESCE(metadata, '{}'::jsonb) || $2::jsonb WHERE id = $1",
       [txn.id, JSON.stringify({ rejectedBy: getAdminUsername(), rejectNote: note || "Rejected by manager", rejectedAt: new Date().toISOString() })]
     );
+    // Clear ref so customer can submit a new proof cleanly.
+    await pool.query("UPDATE orders SET payment_ref = NULL WHERE id = $1", [orderId]);
     await pool.query("INSERT INTO order_status_history (order_id, status, note) VALUES ($1,'Payment Rejected',$2)", [
       orderId,
       note || "Payment proof rejected by manager"
@@ -1374,6 +1401,40 @@ async function handleApi(req, res, urlObj) {
     if (order.session_id) emitRealtimeUpdate(order.session_id, "order_updated", { orderId, paymentStatus: "Pending", status: order.status });
     const dto = await fetchOrderWithDetails(orderId);
     return sendJson(res, 200, { ok: true, order: dto, paymentStatus: "Pending" });
+  }
+
+  if (method === "POST" && pathname.startsWith("/api/admin/orders/") && pathname.endsWith("/payment-status")) {
+    if (!isAdminAuthorized(req)) return sendError(res, 401, "Invalid admin key.");
+    const parts = pathname.split("/").filter(Boolean);
+    const orderId = parts[3] || "";
+    const body = await parseBody(req);
+    const paymentStatus = String(body.paymentStatus || "").trim();
+    const paymentRefInput = String(body.paymentRef || "").trim();
+    if (!orderId) return sendError(res, 400, "orderId is required.");
+    if (!paymentStatus) return sendError(res, 400, "paymentStatus is required.");
+
+    const allowed = new Set(["Paid", "Pending", "Pay on Delivery"]);
+    if (!allowed.has(paymentStatus)) return sendError(res, 400, "Invalid paymentStatus.");
+
+    const order = await queryOne("SELECT * FROM orders WHERE id = $1", [orderId]);
+    if (!order) return sendError(res, 404, "Order not found.");
+    if (String(order.status || "").toLowerCase() === "cancelled") {
+      return sendError(res, 409, "Cancelled orders cannot change payment status.");
+    }
+    if (String(order.payment_mode || "").trim().toUpperCase() !== "COD") {
+      return sendError(res, 409, "Manual payment status updates are only allowed for COD orders.");
+    }
+
+    const paymentRef = paymentStatus === "Paid" ? (paymentRefInput || order.payment_ref || `COD-${Date.now()}`) : null;
+    await pool.query("UPDATE orders SET payment_status = $2, payment_ref = $3 WHERE id = $1", [orderId, paymentStatus, paymentRef]);
+    await pool.query("INSERT INTO order_status_history (order_id, status, note) VALUES ($1,$2,$3)", [
+      orderId,
+      paymentStatus === "Paid" ? "Payment Confirmed" : "Payment Update",
+      paymentStatus === "Paid" ? `COD marked paid. Ref: ${paymentRef}` : `COD payment status -> ${paymentStatus}`
+    ]);
+    if (order.session_id) emitRealtimeUpdate(order.session_id, "order_updated", { orderId, paymentStatus });
+    const dto = await fetchOrderWithDetails(orderId);
+    return sendJson(res, 200, { ok: true, order: dto, paymentStatus, paymentRef: paymentRef || "" });
   }
 
   return sendError(res, 404, "Endpoint not found.");

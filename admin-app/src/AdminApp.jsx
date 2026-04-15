@@ -53,12 +53,28 @@ export function AdminApp() {
 
   const pastRange = useMemo(() => computePastRange(pastPreset, pastFrom, pastTo), [pastPreset, pastFrom, pastTo]);
   const filteredPastOrders = useMemo(
-    () => pastOrders.filter((o) => isWithinRange(o.createdAt, pastRange)),
-    [pastOrders, pastRange]
+    () =>
+      pastOrders
+        .filter((o) => isWithinRange(o.createdAt, pastRange))
+        .filter((o) => {
+          const q = String(orderSearch || "").trim().toLowerCase();
+          if (!q) return true;
+          const hay = `${o.id} ${o.customerName || ""} ${o.customerPhone || ""}`.toLowerCase();
+          return hay.includes(q);
+        }),
+    [pastOrders, pastRange, orderSearch]
   );
   const filteredPastTickets = useMemo(
-    () => pastTickets.filter((t) => isWithinRange(t.createdAt, pastRange)),
-    [pastTickets, pastRange]
+    () =>
+      pastTickets
+        .filter((t) => isWithinRange(t.createdAt, pastRange))
+        .filter((t) => {
+          const q = String(ticketSearch || "").trim().toLowerCase();
+          if (!q) return true;
+          const hay = `${t.id} ${t.orderId || ""} ${t.customerName || ""} ${t.customerPhone || ""} ${t.message || ""}`.toLowerCase();
+          return hay.includes(q);
+        }),
+    [pastTickets, pastRange, ticketSearch]
   );
 
   useEffect(() => {
@@ -257,6 +273,21 @@ export function AdminApp() {
       if (activeOrder?.id === orderId) await openOrder(orderId);
     } catch (error) {
       setNotice(error.message || "Payment verification failed.");
+    }
+  }
+
+  async function updateCodPaymentStatus(orderId, paymentStatus) {
+    try {
+      const paymentRef = paymentStatus === "Paid" ? `COD-${Date.now()}` : "";
+      await api(`/api/admin/orders/${orderId}/payment-status`, {
+        method: "POST",
+        body: JSON.stringify({ paymentStatus, paymentRef })
+      });
+      setNotice(`Payment status updated: ${paymentStatus}`);
+      await refreshAll();
+      if (activeOrder?.id === orderId) await openOrder(orderId);
+    } catch (error) {
+      setNotice(error.message || "Payment status update failed.");
     }
   }
 
@@ -705,6 +736,22 @@ export function AdminApp() {
               <p><strong>Address:</strong> {activeOrder.customer?.address}</p>
               <p><strong>Total:</strong> Rs {activeOrder.pricing?.total}</p>
             </div>
+            {String(activeOrder.paymentMode || "").trim().toUpperCase() === "COD" ? (
+              <div className="detail-block">
+                <strong>COD Payment</strong>
+                <div className="admin-order-actions" style={{ marginTop: "0.6rem" }}>
+                  {String(activeOrder.paymentStatus || "").toLowerCase() !== "paid" ? (
+                    <button className="btn subtle" onClick={() => updateCodPaymentStatus(activeOrder.id, "Paid")}>
+                      Mark COD Paid
+                    </button>
+                  ) : (
+                    <button className="btn subtle" onClick={() => updateCodPaymentStatus(activeOrder.id, "Pending")}>
+                      Mark Unpaid
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : null}
             <div className="detail-block">
               <strong>Status Actions</strong>
               <div className="admin-order-actions" style={{ marginTop: "0.6rem" }}>
@@ -828,10 +875,20 @@ function computePastRange(preset, fromInput, toInput) {
     return { from: startOfDay(from), to: endOfDay(now) };
   }
   if (preset === "custom") {
-    const from = parseDateInput(fromInput);
-    const to = parseDateInput(toInput);
-    if (!from && !to) return { from: null, to: null };
-    return { from: from ? startOfDay(from) : null, to: to ? endOfDay(to) : null };
+    const fromParsed = parseDateInput(fromInput);
+    const toParsed = parseDateInput(toInput);
+    if (!fromParsed && !toParsed) return { from: null, to: null };
+    let from = fromParsed ? startOfDay(fromParsed) : null;
+    let to = toParsed ? endOfDay(toParsed) : null;
+    if (from && to && from > to) {
+      // User selected dates in reverse order; normalize.
+      const tmp = from;
+      from = startOfDay(toParsed);
+      to = endOfDay(fromParsed);
+      // tmp is intentionally unused after swap; kept for clarity.
+      void tmp;
+    }
+    return { from, to };
   }
   // default last7
   const from = new Date(now);
