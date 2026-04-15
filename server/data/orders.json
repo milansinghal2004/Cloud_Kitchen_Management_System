@@ -586,5 +586,44 @@
       "appliedOffer": null
     },
     "paymentRef": "PAY-123"
+  },
+  {
+    "id": "order-1fdbac76",
+    "sessionId": "sess_pkd2o0rgd",
+    "userId": "user-f427b02b",
+    "createdAt": "2026-04-15T06:21:39.531Z",
+    "customer": {
+      "name": "milan",
+      "phone": "06376889965",
+      "address": "Scholar Paradise boys hostel, Dehradun, India"
+    },
+    "paymentMode": "COD",
+    "etaMinutes": 32,
+    "status": "Confirmed",
+    "statusHistory": [
+      {
+        "status": "Confirmed",
+        "at": "2026-04-15T06:21:39.531Z",
+        "note": "Order placed"
+      }
+    ],
+    "paymentStatus": "Pay on Delivery",
+    "items": [
+      {
+        "id": "dish-001",
+        "name": "Royal Pot Biryani",
+        "price": 329,
+        "quantity": 1,
+        "image": "/assets/feature-biryani.jpg"
+      }
+    ],
+    "pricing": {
+      "subtotal": 329,
+      "discount": 0,
+      "deliveryFee": 39,
+      "tax": 16,
+      "total": 384,
+      "appliedOffer": null
+    }
   }
 ]
