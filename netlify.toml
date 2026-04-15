@@ -18,12 +18,12 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://YOUR-BACKEND-DOMAIN/api/:splat"
+  to = "https://ck-project.onrender.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/assets/*"
-  to = "https://YOUR-BACKEND-DOMAIN/assets/:splat"
+  to = "https://ck-project.onrender.com/assets/:splat"
   status = 200
   force = true
