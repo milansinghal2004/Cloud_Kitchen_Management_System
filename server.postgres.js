@@ -492,8 +492,13 @@ async function handleApi(req, res, urlObj) {
         o.*,
         a.chef_id AS assigned_chef_id,
         c.name AS assigned_chef_name,
+        c.station AS assigned_chef_station,
         COALESCE(oi.total_items, 0)::int AS total_items,
-        COALESCE(oia.assigned_items, 0)::int AS assigned_items
+        COALESCE(oia.assigned_items, 0)::int AS assigned_items,
+        COALESCE(item_chefs.chef_count, 0)::int AS item_chef_count,
+        item_chefs.only_chef_id AS item_only_chef_id,
+        item_chefs.only_chef_name AS item_only_chef_name,
+        item_chefs.only_chef_station AS item_only_chef_station
       FROM orders o
       LEFT JOIN order_assignments a ON a.order_id = o.id
       LEFT JOIN chefs c ON c.id = a.chef_id
@@ -507,6 +512,17 @@ async function handleApi(req, res, urlObj) {
         FROM order_item_assignments
         GROUP BY order_id
       ) oia ON oia.order_id = o.id
+      LEFT JOIN (
+        SELECT
+          oia.order_id,
+          COUNT(DISTINCT oia.chef_id)::int AS chef_count,
+          CASE WHEN COUNT(DISTINCT oia.chef_id) = 1 THEN MIN(oia.chef_id) END AS only_chef_id,
+          CASE WHEN COUNT(DISTINCT oia.chef_id) = 1 THEN MIN(c.name) END AS only_chef_name,
+          CASE WHEN COUNT(DISTINCT oia.chef_id) = 1 THEN MIN(c.station) END AS only_chef_station
+        FROM order_item_assignments oia
+        JOIN chefs c ON c.id = oia.chef_id
+        GROUP BY oia.order_id
+      ) item_chefs ON item_chefs.order_id = o.id
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY o.created_at DESC
       LIMIT $${params.length}
@@ -520,7 +536,13 @@ async function handleApi(req, res, urlObj) {
       customerPhone: r.customer_phone,
       total: r.total,
       createdAt: r.created_at,
-      assignedChef: r.assigned_chef_id ? { id: r.assigned_chef_id, name: r.assigned_chef_name } : null,
+      assignedChef: r.assigned_chef_id
+        ? { id: r.assigned_chef_id, name: r.assigned_chef_name, station: r.assigned_chef_station }
+        : r.item_only_chef_id
+          ? { id: r.item_only_chef_id, name: r.item_only_chef_name, station: r.item_only_chef_station }
+          : r.item_chef_count > 1
+            ? { id: "multiple", name: `Multiple (${r.item_chef_count})`, station: "" }
+            : null,
       totalItems: r.total_items,
       assignedItems: r.assigned_items
     }));
@@ -1435,6 +1457,127 @@ async function handleApi(req, res, urlObj) {
     if (order.session_id) emitRealtimeUpdate(order.session_id, "order_updated", { orderId, paymentStatus });
     const dto = await fetchOrderWithDetails(orderId);
     return sendJson(res, 200, { ok: true, order: dto, paymentStatus, paymentRef: paymentRef || "" });
+  }
+
+  if (method === "GET" && pathname === "/api/admin/analytics") {
+    if (!isAdminAuthorized(req)) return sendError(res, 401, "Invalid admin key.");
+    const fromRaw = String(urlObj.searchParams.get("from") || "").trim();
+    const toRaw = String(urlObj.searchParams.get("to") || "").trim();
+    const from = fromRaw ? new Date(fromRaw) : null;
+    const to = toRaw ? new Date(toRaw) : null;
+    if ((fromRaw && Number.isNaN(from?.getTime?.())) || (toRaw && Number.isNaN(to?.getTime?.()))) {
+      return sendError(res, 400, "Invalid from/to timestamp.");
+    }
+
+    const params = [];
+    const where = [];
+    if (from) {
+      params.push(from.toISOString());
+      where.push(`created_at >= $${params.length}::timestamptz`);
+    }
+    if (to) {
+      params.push(to.toISOString());
+      where.push(`created_at <= $${params.length}::timestamptz`);
+    }
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    const [
+      summaryRes,
+      statusRes,
+      paymentModeRes,
+      hourlyRes,
+      topItemsRes,
+      topCustomersRes,
+      pendingPaymentsRes
+    ] = await Promise.all([
+      pool.query(
+        `SELECT
+          COUNT(*)::int AS orders,
+          COALESCE(SUM(total),0)::int AS revenue,
+          COALESCE(ROUND(AVG(total))::int, 0) AS aov,
+          COUNT(*) FILTER (WHERE status = 'Delivered')::int AS delivered,
+          COUNT(*) FILTER (WHERE status = 'Cancelled')::int AS cancelled
+         FROM orders
+         ${whereSql}`,
+        params
+      ),
+      pool.query(
+        `SELECT status, COUNT(*)::int AS count
+         FROM orders
+         ${whereSql}
+         GROUP BY status
+         ORDER BY count DESC`,
+        params
+      ),
+      pool.query(
+        `SELECT payment_mode AS mode, COUNT(*)::int AS count
+         FROM orders
+         ${whereSql}
+         GROUP BY payment_mode
+         ORDER BY count DESC`,
+        params
+      ),
+      pool.query(
+        `SELECT EXTRACT(HOUR FROM created_at)::int AS hour, COUNT(*)::int AS count
+         FROM orders
+         ${whereSql}
+         GROUP BY hour
+         ORDER BY hour ASC`,
+        params
+      ),
+      pool.query(
+        `SELECT
+          oi.item_name AS name,
+          SUM(oi.quantity)::int AS qty,
+          SUM(oi.quantity * oi.item_price)::int AS revenue
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         ${where.length ? `WHERE ${where.map((w) => w.replace(/created_at/g, "o.created_at")).join(" AND ")}` : ""}
+         GROUP BY oi.item_name
+         ORDER BY qty DESC, revenue DESC
+         LIMIT 20`,
+        params
+      ),
+      pool.query(
+        `SELECT
+          o.customer_phone AS phone,
+          MIN(o.customer_name) AS name,
+          COUNT(*)::int AS orders,
+          COALESCE(SUM(o.total),0)::int AS spend
+         FROM orders o
+         ${where.length ? `WHERE ${where.map((w) => w.replace(/created_at/g, "o.created_at")).join(" AND ")}` : ""}
+         GROUP BY o.customer_phone
+         ORDER BY orders DESC, spend DESC
+         LIMIT 20`,
+        params
+      ),
+      pool.query(
+        `SELECT COUNT(*)::int AS pendingPayments
+         FROM orders
+         ${whereSql}
+         AND LOWER(payment_status) IN ('pending','verification pending')`,
+        params
+      ).catch(async () => {
+        // Fallback for when whereSql is empty (can't prepend AND)
+        const w = whereSql ? `${whereSql} AND` : "WHERE";
+        const sql = `SELECT COUNT(*)::int AS pendingPayments FROM orders ${w} LOWER(payment_status) IN ('pending','verification pending')`;
+        return await pool.query(sql, params);
+      })
+    ]);
+
+    const summary = summaryRes.rows[0] || {};
+    const pendingPayments = pendingPaymentsRes.rows[0]?.pendingpayments ?? pendingPaymentsRes.rows[0]?.pendingPayments ?? 0;
+
+    return sendJson(res, 200, {
+      ok: true,
+      range: { from: from ? from.toISOString() : "", to: to ? to.toISOString() : "" },
+      summary: { ...summary, pendingPayments },
+      statuses: statusRes.rows || [],
+      paymentModes: paymentModeRes.rows || [],
+      hourly: hourlyRes.rows || [],
+      topItems: topItemsRes.rows || [],
+      topCustomers: topCustomersRes.rows || []
+    });
   }
 
   return sendError(res, 404, "Endpoint not found.");

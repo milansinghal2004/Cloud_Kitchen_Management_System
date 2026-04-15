@@ -4,7 +4,8 @@ const STATUS_OPTIONS = ["Confirmed", "Preparing", "Out for Delivery", "Delivered
 const VIEWS = {
   TODAY: "today",
   PAST_ORDERS: "past-orders",
-  PAST_TICKETS: "past-tickets"
+  PAST_TICKETS: "past-tickets",
+  ANALYTICS: "analytics"
 };
 
 export function AdminApp() {
@@ -34,6 +35,7 @@ export function AdminApp() {
       const v = String(url.searchParams.get("view") || "").trim().toLowerCase();
       if (v === VIEWS.PAST_ORDERS) return VIEWS.PAST_ORDERS;
       if (v === VIEWS.PAST_TICKETS) return VIEWS.PAST_TICKETS;
+      if (v === VIEWS.ANALYTICS) return VIEWS.ANALYTICS;
       return VIEWS.TODAY;
     } catch {
       return VIEWS.TODAY;
@@ -42,6 +44,10 @@ export function AdminApp() {
   const [pastPreset, setPastPreset] = useState("last7");
   const [pastFrom, setPastFrom] = useState("");
   const [pastTo, setPastTo] = useState("");
+  const [analyticsPreset, setAnalyticsPreset] = useState("last7");
+  const [analyticsFrom, setAnalyticsFrom] = useState("");
+  const [analyticsTo, setAnalyticsTo] = useState("");
+  const [analytics, setAnalytics] = useState(null);
 
   const onDutyChefs = useMemo(() => chefs.filter((c) => c.isOnDuty), [chefs]);
   const activeChefs = useMemo(() => chefs.filter((c) => c.isActive !== false), [chefs]);
@@ -104,6 +110,12 @@ export function AdminApp() {
       // no-op
     }
   }, [view]);
+
+  useEffect(() => {
+    if (!adminKey || !apiBase) return;
+    if (view !== VIEWS.ANALYTICS) return;
+    loadAnalytics();
+  }, [view, adminKey, apiBase, analyticsPreset, analyticsFrom, analyticsTo]);
 
   useEffect(() => {
     if (!activeOrder) return;
@@ -200,6 +212,21 @@ export function AdminApp() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Request failed");
     return data;
+  }
+
+  async function loadAnalytics() {
+    try {
+      const range = computePastRange(analyticsPreset, analyticsFrom, analyticsTo);
+      const q = new URLSearchParams();
+      if (range?.from) q.set("from", range.from.toISOString());
+      if (range?.to) q.set("to", range.to.toISOString());
+      const data = await api(`/api/admin/analytics?${q.toString()}`);
+      setAnalytics(data);
+      setNotice("Analytics updated.");
+    } catch (error) {
+      setAnalytics(null);
+      setNotice(`Unable to load analytics: ${error.message}`);
+    }
   }
 
   async function refreshAll() {
@@ -453,6 +480,16 @@ export function AdminApp() {
               }}
             >
               Past Tickets
+            </button>
+            <button
+              type="button"
+              className="btn subtle"
+              onClick={() => {
+                setView(VIEWS.ANALYTICS);
+                document.getElementById("analytics")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              Analytics
             </button>
           </nav>
           <div className="topbar-actions">
@@ -720,6 +757,177 @@ export function AdminApp() {
             </div>
           </section>
         ) : null}
+
+        {view === VIEWS.ANALYTICS ? (
+          <section className="section" id="analytics">
+            <div className="section-head">
+              <div>
+                <p className="kicker">Insights</p>
+                <h2>Analytics</h2>
+              </div>
+              <div className="order-filters">
+                <select value={analyticsPreset} onChange={(e) => setAnalyticsPreset(e.target.value)}>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last7">Last 7 days</option>
+                  <option value="last30">Last 30 days</option>
+                  <option value="custom">Custom range</option>
+                </select>
+                <input
+                  type="date"
+                  value={analyticsFrom}
+                  onChange={(e) => setAnalyticsFrom(e.target.value)}
+                  disabled={analyticsPreset !== "custom"}
+                  title="From date"
+                />
+                <input
+                  type="date"
+                  value={analyticsTo}
+                  onChange={(e) => setAnalyticsTo(e.target.value)}
+                  disabled={analyticsPreset !== "custom"}
+                  title="To date"
+                />
+                <button className="btn subtle" type="button" onClick={loadAnalytics}>
+                  Refresh
+                </button>
+                <button className="btn subtle" type="button" onClick={() => setView(VIEWS.TODAY)}>
+                  Back to today
+                </button>
+              </div>
+            </div>
+
+            {!analytics?.ok ? (
+              <p>No analytics data loaded yet.</p>
+            ) : (
+              <>
+                <div className="kpi-grid" style={{ marginTop: "0.7rem" }}>
+                  <Kpi title="Orders" value={analytics.summary?.orders || 0} />
+                  <Kpi title="Revenue" value={`Rs ${analytics.summary?.revenue || 0}`} />
+                  <Kpi title="Avg order value" value={`Rs ${analytics.summary?.aov || 0}`} />
+                  <Kpi title="Delivered" value={analytics.summary?.delivered || 0} />
+                  <Kpi title="Cancelled" value={analytics.summary?.cancelled || 0} />
+                  <Kpi title="Pending payments" value={analytics.summary?.pendingPayments || 0} />
+                </div>
+
+                <div className="analytics-grid" style={{ marginTop: "1rem" }}>
+                  <ChartCard title="Peak hours (orders)" subtitle="Hover bars to inspect">
+                    <BarChart
+                      data={(analytics.hourly || []).map((h) => ({
+                        key: String(h.hour).padStart(2, "0"),
+                        label: `${String(h.hour).padStart(2, "0")}:00`,
+                        value: Number(h.count || 0)
+                      }))}
+                      valueSuffix=" orders"
+                    />
+                  </ChartCard>
+                  <ChartCard title="Payment modes" subtitle="Hover bars to inspect">
+                    <BarChart
+                      data={(analytics.paymentModes || []).map((p) => ({
+                        key: String(p.mode || ""),
+                        label: String(p.mode || ""),
+                        value: Number(p.count || 0)
+                      }))}
+                      valueSuffix=""
+                    />
+                  </ChartCard>
+                </div>
+
+                <div className="analytics-grid" style={{ marginTop: "1rem" }}>
+                  <ChartCard title="Top items (by quantity)" subtitle="Top 10">
+                    <BarChart
+                      data={(analytics.topItems || []).slice(0, 10).map((it) => ({
+                        key: String(it.name || ""),
+                        label: String(it.name || ""),
+                        value: Number(it.qty || 0),
+                        metaRight: `Rs ${Number(it.revenue || 0)}`
+                      }))}
+                      maxLabelChars={18}
+                      valueSuffix=""
+                    />
+                  </ChartCard>
+                  <ChartCard title="Top customers (by orders)" subtitle="Top 10">
+                    <BarChart
+                      data={(analytics.topCustomers || []).slice(0, 10).map((c) => ({
+                        key: `${c.phone || ""}-${c.name || ""}`,
+                        label: `${String(c.name || "Customer")} (${String(c.phone || "").slice(-4)})`,
+                        value: Number(c.orders || 0),
+                        metaRight: `Rs ${Number(c.spend || 0)}`
+                      }))}
+                      maxLabelChars={18}
+                      valueSuffix=""
+                    />
+                  </ChartCard>
+                </div>
+
+                <div className="orders-layout" style={{ marginTop: "1rem" }}>
+                  <div>
+                    <h3>Top items</h3>
+                    {!analytics.topItems?.length ? (
+                      <p>No data.</p>
+                    ) : (
+                      <div className="admin-orders-grid">
+                        {analytics.topItems.slice(0, 10).map((it) => (
+                          <article className="admin-order-card" key={it.name}>
+                            <h4>{it.name}</h4>
+                            <p><span className="chip">Qty {it.qty}</span> <span className="chip">Rs {it.revenue}</span></p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3>Top customers</h3>
+                    {!analytics.topCustomers?.length ? (
+                      <p>No data.</p>
+                    ) : (
+                      <div className="admin-orders-grid">
+                        {analytics.topCustomers.slice(0, 10).map((c) => (
+                          <article className="admin-order-card" key={`${c.phone}-${c.name}`}>
+                            <h4>{c.name || "Customer"}</h4>
+                            <p>{c.phone}</p>
+                            <p><span className="chip">Orders {c.orders}</span> <span className="chip">Rs {c.spend}</span></p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="orders-layout" style={{ marginTop: "1rem" }}>
+                  <div>
+                    <h3>Payment modes</h3>
+                    {!analytics.paymentModes?.length ? (
+                      <p>No data.</p>
+                    ) : (
+                      <div className="admin-orders-grid">
+                        {analytics.paymentModes.map((p) => (
+                          <article className="admin-order-card" key={p.mode}>
+                            <h4>{p.mode}</h4>
+                            <p><span className="chip">{p.count}</span></p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3>Peak hours</h3>
+                    {!analytics.hourly?.length ? (
+                      <p>No data.</p>
+                    ) : (
+                      <div className="admin-orders-grid">
+                        {analytics.hourly.map((h) => (
+                          <article className="admin-order-card" key={h.hour}>
+                            <h4>{String(h.hour).padStart(2, "0")}:00</h4>
+                            <p><span className="chip">{h.count} orders</span></p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
+        ) : null}
       </main>
 
       {activeOrder ? (
@@ -906,4 +1114,80 @@ function isWithinRange(value, range) {
   } catch {
     return false;
   }
+}
+
+function ChartCard({ title, subtitle, children }) {
+  return (
+    <article className="chart-card">
+      <div className="chart-head">
+        <div>
+          <h3 style={{ margin: 0 }}>{title}</h3>
+          {subtitle ? <p className="chart-subtitle">{subtitle}</p> : null}
+        </div>
+      </div>
+      <div className="chart-body">{children}</div>
+    </article>
+  );
+}
+
+function BarChart({ data, valueSuffix = "", maxLabelChars = 24 }) {
+  const [tip, setTip] = useState(null);
+  const max = Math.max(1, ...(data || []).map((d) => Number(d.value || 0)));
+
+  function onLeave() {
+    setTip(null);
+  }
+
+  return (
+    <div className="chart-wrap" onMouseLeave={onLeave}>
+      {tip ? (
+        <div className="chart-tooltip" style={{ left: tip.x, top: tip.y }}>
+          <strong>{tip.title}</strong>
+          <div>{tip.value}</div>
+          {tip.metaRight ? <div className="chart-tip-meta">{tip.metaRight}</div> : null}
+        </div>
+      ) : null}
+      <svg viewBox="0 0 1000 320" preserveAspectRatio="none" className="chart-svg">
+        {/* Bars area */}
+        {(data || []).map((d, idx) => {
+          const v = Math.max(0, Number(d.value || 0));
+          const barW = 1000 / Math.max(1, data.length);
+          const x = idx * barW;
+          const h = (v / max) * 240;
+          const y = 40 + (240 - h);
+          const label = String(d.label || d.key || "");
+          const showLabel = label.length > maxLabelChars ? `${label.slice(0, maxLabelChars - 1)}…` : label;
+          return (
+            <g key={d.key || `${idx}`}>
+              <rect
+                x={x + 8}
+                y={y}
+                width={Math.max(6, barW - 16)}
+                height={h}
+                rx="10"
+                className="chart-bar"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                  const px = rect ? e.clientX - rect.left : 0;
+                  const py = rect ? e.clientY - rect.top : 0;
+                  setTip({
+                    x: Math.min(820, Math.max(8, px + 12)),
+                    y: Math.min(240, Math.max(8, py - 18)),
+                    title: label,
+                    value: `${v}${valueSuffix}`,
+                    metaRight: d.metaRight || ""
+                  });
+                }}
+              />
+              <text x={x + barW / 2} y={306} textAnchor="middle" className="chart-label">
+                {showLabel}
+              </text>
+            </g>
+          );
+        })}
+        {/* Baseline */}
+        <line x1="0" y1="280" x2="1000" y2="280" className="chart-axis" />
+      </svg>
+    </div>
+  );
 }
