@@ -3,15 +3,20 @@ const refs = {
   consumerEmail: document.getElementById("consumerEmail"),
   consumerPassword: document.getElementById("consumerPassword"),
   openRegisterBtn: document.getElementById("openRegisterBtn"),
+  openAdminBtn: document.getElementById("openAdminBtn"),
+  openAdminBtnInline: document.getElementById("openAdminBtnInline"),
   registerDialog: document.getElementById("registerDialog"),
   consumerRegisterForm: document.getElementById("consumerRegisterForm"),
   registerName: document.getElementById("registerName"),
   registerEmail: document.getElementById("registerEmail"),
   registerPassword: document.getElementById("registerPassword"),
   closeRegisterBtn: document.getElementById("closeRegisterBtn"),
+  adminDialog: document.getElementById("adminDialog"),
   adminLoginForm: document.getElementById("adminLoginForm"),
   adminUsername: document.getElementById("adminUsername"),
   adminPassword: document.getElementById("adminPassword"),
+  closeAdminBtn: document.getElementById("closeAdminBtn"),
+  cancelAdminBtn: document.getElementById("cancelAdminBtn"),
   landingNotice: document.getElementById("landingNotice")
 };
 
@@ -22,7 +27,24 @@ function wireEvents() {
   refs.openRegisterBtn.addEventListener("click", () => refs.registerDialog.showModal());
   refs.closeRegisterBtn.addEventListener("click", () => refs.registerDialog.close());
   refs.consumerRegisterForm.addEventListener("submit", registerConsumer);
+  refs.openAdminBtn.addEventListener("click", openAdminDialog);
+  refs.openAdminBtnInline.addEventListener("click", openAdminDialog);
+  refs.closeAdminBtn.addEventListener("click", closeAdminDialog);
+  refs.cancelAdminBtn.addEventListener("click", closeAdminDialog);
+  refs.adminDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeAdminDialog();
+  });
   refs.adminLoginForm.addEventListener("submit", loginAdmin);
+}
+
+function openAdminDialog() {
+  if (!refs.adminDialog.open) refs.adminDialog.showModal();
+  refs.adminUsername.focus();
+}
+
+function closeAdminDialog() {
+  if (refs.adminDialog.open) refs.adminDialog.close();
 }
 
 async function loginConsumer(event) {
@@ -101,6 +123,7 @@ async function loginAdmin(event) {
   localStorage.setItem("ck_admin_key", data.adminKey);
   localStorage.setItem("ck_admin_user", data.admin.username);
   showNotice("Admin login successful. Redirecting...");
+  closeAdminDialog();
   window.location.href = "/admin-react/";
 }
 

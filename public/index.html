@@ -18,52 +18,119 @@
           <img src="/assets/logo-ck.png" alt="CK logo" />
           <div>
             <strong>Cloud Kitchen</strong>
-            <span>Startup Mode</span>
+            <span>Fresh, fast, customer-first</span>
           </div>
         </a>
+        <div class="topbar-actions">
+          <button id="openAdminBtn" type="button" class="btn subtle admin-portal-btn">Admin Portal</button>
+        </div>
       </div>
     </header>
 
     <main class="container landing-main">
       <section class="landing-shell">
         <article class="landing-showcase">
-          <p class="kicker">Unified Access</p>
-          <h1>Cloud Kitchen</h1>
-          <p>One elegant entry point for both customers and kitchen operations. Real-time orders, live status updates, and practical business-ready workflows.</p>
+          <p class="kicker">Customer Login</p>
+          <h1>Fresh meals, quick checkout, and live order tracking.</h1>
+          <p class="hero-copy">
+            The experience is now centered on the customer journey: sign in, place an order, track the kitchen in
+            real time, and keep everything moving from one polished flow.
+          </p>
+
+          <div class="hero-badges" aria-label="Customer benefits">
+            <span>Fast sign in</span>
+            <span>Live order updates</span>
+            <span>Reorder in one tap</span>
+          </div>
+
+          <div class="hero-tiles">
+            <article>
+              <strong>Clean checkout</strong>
+              <p>Track your cart, offers, and payment progress without clutter.</p>
+            </article>
+            <article>
+              <strong>Always visible</strong>
+              <p>Status updates, support replies, and past orders stay easy to reach.</p>
+            </article>
+            <article>
+              <strong>Built for daily use</strong>
+              <p>Designed to feel like a polished food delivery app, not a dashboard.</p>
+            </article>
+          </div>
+
           <div class="showcase-image-wrap">
             <img src="/assets/hero-bg.png" alt="Cloud Kitchen ambience" />
           </div>
         </article>
 
         <article class="login-surface">
-          <div class="login-grid">
-            <article class="login-card">
-              <h2>Customer Login</h2>
-              <p>Place, track, cancel, and reorder in one flow.</p>
+          <div class="login-grid customer-panel">
+            <article class="login-card customer-card">
+              <div class="card-topline">
+                <div>
+                  <p class="kicker">Customer Access</p>
+                  <h2>Sign in to your kitchen account</h2>
+                </div>
+                <a class="guest-link" href="/customer-react/">Continue as Guest</a>
+              </div>
+              <p>Use your account to track orders, save details, reorder quickly, and manage support conversations.</p>
               <form id="consumerLoginForm" class="stack-form">
-                <input id="consumerEmail" type="text" placeholder="Registered email" required />
-                <input id="consumerPassword" type="password" placeholder="Password" required />
+                <input id="consumerEmail" type="text" placeholder="Registered email" autocomplete="email" required />
+                <input id="consumerPassword" type="password" placeholder="Password" autocomplete="current-password" required />
                 <div class="row-actions">
                   <button type="submit" class="btn accent">Login</button>
                   <button id="openRegisterBtn" type="button" class="btn subtle">Create Account</button>
                 </div>
               </form>
-              <a class="btn subtle full" href="/customer-react/">Continue as Guest</a>
+              <div class="customer-footer">
+                <span>Need manager access?</span>
+                <button id="openAdminBtnInline" type="button" class="text-btn">Open admin portal</button>
+              </div>
             </article>
 
-            <article class="login-card admin-card">
-              <h2>Admin Access</h2>
-              <p>Kitchen manager login for orders, chefs, and status control.</p>
-              <form id="adminLoginForm" class="stack-form">
-                <input id="adminUsername" type="text" placeholder="Manager username" required />
-                <input id="adminPassword" type="password" placeholder="Manager password" required />
-                <button type="submit" class="btn accent">Admin Login</button>
-              </form>
-              <p class="small-note">Credentials come from <code>.env</code> via <code>ADMIN_USERNAME</code> and <code>ADMIN_PASSWORD</code>.</p>
+            <article class="quick-strip">
+              <div>
+                <strong>What customers can do</strong>
+                <p>Browse menu, apply offers, pay securely, cancel orders, and follow ticket replies.</p>
+              </div>
+              <div class="quick-grid">
+                <span>Order tracking</span>
+                <span>Support tickets</span>
+                <span>Offer codes</span>
+                <span>Past orders</span>
+              </div>
             </article>
           </div>
         </article>
       </section>
+
+      <dialog id="adminDialog">
+        <form id="adminLoginForm" class="dialog-card admin-dialog-card">
+          <div class="dialog-head">
+            <div>
+              <p class="kicker">Admin Portal</p>
+              <h3>Manager login</h3>
+            </div>
+            <button type="button" id="closeAdminBtn" class="icon-btn" aria-label="Close admin dialog">X</button>
+          </div>
+          <p class="dialog-copy">A discreet entry point for kitchen managers without distracting from the customer experience.</p>
+          <div class="form-grid">
+            <label>
+              Username
+              <input id="adminUsername" type="text" placeholder="Manager username" required />
+            </label>
+            <label>
+              Password
+              <input id="adminPassword" type="password" placeholder="Manager password" required />
+            </label>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" id="cancelAdminBtn" class="btn subtle">Cancel</button>
+            <button type="submit" class="btn accent">Admin Login</button>
+          </div>
+          <p class="small-note">Credentials come from <code>.env</code> via <code>ADMIN_USERNAME</code> and <code>ADMIN_PASSWORD</code>.</p>
+        </form>
+      </dialog>
 
       <dialog id="registerDialog">
         <form id="consumerRegisterForm" method="dialog" class="dialog-card">

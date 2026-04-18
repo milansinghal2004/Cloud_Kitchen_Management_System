@@ -1,42 +1,108 @@
 .landing-main {
-  padding: 1.35rem 0 2.4rem;
+  padding: 1.35rem 0 2.6rem;
 }
 
 .landing-shell {
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: 1.15rem;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 1.2rem;
   align-items: stretch;
 }
 
-.landing-showcase {
-  border-radius: 24px;
+.landing-showcase,
+.login-surface {
+  border-radius: 28px;
   border: 1px solid #efdccc;
-  background: linear-gradient(160deg, #fff9f4 0%, #ffeddc 100%);
   box-shadow: var(--shadow);
-  padding: 1.2rem;
+}
+
+.landing-showcase {
+  background:
+    radial-gradient(circle at top right, rgba(255, 187, 155, 0.4), transparent 35%),
+    linear-gradient(160deg, #fffdfb 0%, #fff1e3 100%);
+  padding: 1.35rem;
   display: flex;
   flex-direction: column;
+  min-height: 100%;
 }
 
 .landing-showcase h1 {
   font-family: "Playfair Display", serif;
-  font-size: clamp(1.9rem, 4vw, 2.8rem);
-  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(2.15rem, 5vw, 3.55rem);
+  line-height: 1.02;
+  margin: 0.35rem 0 0.75rem;
+  max-width: 12ch;
 }
 
-.landing-showcase p {
+.hero-copy {
   margin: 0;
   color: var(--muted);
-  max-width: 52ch;
+  max-width: 57ch;
+  font-size: 1.01rem;
+  line-height: 1.7;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1.1rem 0 1rem;
+}
+
+.hero-badges span,
+.quick-grid span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #efd6c4;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  padding: 0.5rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 8px 18px rgba(110, 66, 30, 0.05);
+}
+
+.hero-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.25rem 0 1.1rem;
+}
+
+.hero-tiles article,
+.quick-strip {
+  border: 1px solid #efdfd2;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.hero-tiles article {
+  padding: 0.95rem;
+}
+
+.hero-tiles strong,
+.quick-strip strong {
+  display: block;
+  font-size: 0.98rem;
+  margin-bottom: 0.35rem;
+}
+
+.hero-tiles p,
+.quick-strip p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.92rem;
 }
 
 .showcase-image-wrap {
   margin-top: auto;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   border: 1px solid #f1d6c1;
-  min-height: 220px;
+  min-height: 240px;
 }
 
 .showcase-image-wrap img {
@@ -46,38 +112,61 @@
 }
 
 .login-surface {
-  border-radius: 24px;
-  border: 1px solid #efdccc;
-  background: #fff;
-  box-shadow: var(--shadow);
+  background: linear-gradient(180deg, #fffdfb 0%, #fff8f1 100%);
   padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .login-grid {
   display: grid;
-  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
-.login-card {
+.customer-panel {
+  grid-template-rows: auto auto;
+}
+
+.login-card,
+.quick-strip {
   border: 1px solid #efdfd2;
-  border-radius: 16px;
-  padding: 1rem;
-  background: #fffcf9;
+  border-radius: 22px;
+  padding: 1.05rem;
 }
 
-.login-card.admin-card {
-  background: linear-gradient(155deg, #fffdf9 0%, #fff2e6 100%);
+.customer-card {
+  background: #fff;
 }
 
-.login-card h2 {
-  margin: 0.1rem 0;
-  font-size: 1.2rem;
+.card-topline {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.85rem;
 }
 
-.login-card p {
-  margin: 0.2rem 0 0.75rem;
+.card-topline h2,
+.dialog-head h3 {
+  margin: 0.15rem 0 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+}
+
+.guest-link {
+  flex-shrink: 0;
+  align-self: flex-start;
+  color: var(--accent-dark);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 0.92rem;
+  padding-top: 0.25rem;
+}
+
+.customer-card > p {
+  margin: 0.3rem 0 0.95rem;
   color: var(--muted);
+  line-height: 1.65;
 }
 
 .stack-form {
@@ -88,25 +177,64 @@
 
 .row-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.08fr 0.92fr;
   gap: 0.6rem;
-  margin-top: 0.15rem;
-  margin-bottom: 0.25rem;
+  margin-top: 0.1rem;
+}
+
+.row-actions .btn,
+.admin-portal-btn,
+.text-btn,
+.dialog-actions .btn,
+.quick-strip {
+  min-height: 44px;
 }
 
 .row-actions .btn {
   width: 100%;
-  min-height: 44px;
   padding: 0.68rem 0.95rem;
   white-space: nowrap;
 }
 
-.login-card .btn.full {
-  margin-top: 0.5rem;
-  min-height: 44px;
-  display: block;
-  width: 100%;
-  text-align: center;
+.customer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f0e0d1;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.text-btn {
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  font-weight: 800;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.quick-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: linear-gradient(145deg, #fff7ef 0%, #fffdfb 100%);
+}
+
+.quick-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-portal-btn {
+  padding-inline: 1rem;
 }
 
 .small-note {
@@ -121,17 +249,70 @@
   color: #2a5e2a;
 }
 
+dialog::backdrop {
+  background: rgba(28, 21, 15, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.dialog-card {
+  width: min(560px, 92vw);
+  border: 1px solid #efdccc;
+  border-radius: 24px;
+  padding: 1.1rem;
+  background: #fffdf9;
+  box-shadow: var(--shadow);
+}
+
+.admin-dialog-card .dialog-copy {
+  margin: 0.45rem 0 1rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.dialog-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.icon-btn {
+  border: 1px solid #0f172a;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .hero-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 980px) {
   .landing-shell {
     grid-template-columns: 1fr;
   }
   .showcase-image-wrap {
-    min-height: 170px;
+    min-height: 190px;
   }
 }
 
 @media (max-width: 560px) {
+  .card-topline,
+  .customer-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .row-actions {
     grid-template-columns: 1fr;
+  }
+  .topbar-inner {
+    gap: 0.8rem;
   }
 }
