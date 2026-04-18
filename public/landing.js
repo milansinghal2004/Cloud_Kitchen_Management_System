@@ -11,6 +11,8 @@ const refs = {
   signupForm: document.getElementById("signupForm"),
   consumerUsername: document.getElementById("consumerUsername"),
   consumerPassword: document.getElementById("consumerPassword"),
+  registerName: document.getElementById("registerName"),
+  registerEmail: document.getElementById("registerEmail"),
   registerUsername: document.getElementById("registerUsername"),
   registerPassword: document.getElementById("registerPassword"),
   passwordStrength: document.getElementById("passwordStrength"),
@@ -151,6 +153,8 @@ async function loginConsumer(event) {
 async function registerConsumer(event) {
   event.preventDefault();
   const username = refs.registerUsername.value.trim();
+  const email = refs.registerEmail.value.trim();
+  const name = refs.registerName.value.trim();
   const password = refs.registerPassword.value;
   const passwordError = validatePassword(password, username);
   if (passwordError) {
@@ -159,6 +163,8 @@ async function registerConsumer(event) {
   }
   const payload = {
     username,
+    email,
+    name,
     password
   };
   let res;

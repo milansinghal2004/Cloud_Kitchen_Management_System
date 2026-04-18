@@ -999,3 +999,112 @@ dialog::backdrop {
   50% { box-shadow: 0 0 0 10px rgba(88, 146, 255, 0.1); background: #edf5ff; }
   100% { box-shadow: 0 0 0 0 rgba(88, 146, 255, 0); background: #fff; }
 }
+
+/* Auth Modal & Flow Improvements */
+.auth-modal {
+  width: min(440px, 92vw);
+  padding: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f7f1eb;
+  border-bottom: 1px solid var(--line);
+}
+
+.auth-tab {
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.auth-tab.active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 -2px 0 var(--accent) inset;
+}
+
+.auth-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.auth-content h3 {
+  font-family: "Playfair Display", serif;
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.auth-subtitle {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  text-align: left;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 3.5rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-transform: uppercase;
+  padding: 0.4rem;
+}
+
+.auth-footer {
+  margin-top: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.text-btn {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  text-decoration: underline;
+}
+
+.auth-form .btn {
+  margin-top: 0.5rem;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}

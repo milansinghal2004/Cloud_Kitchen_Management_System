@@ -25,7 +25,9 @@ export function CustomerApp() {
   const [orderSupport, setOrderSupport] = useState([]);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  const [authForm, setAuthForm] = useState({ username: "", password: "" });
+  const [authForm, setAuthForm] = useState({ username: "", password: "", email: "", name: "" });
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [cancelDraft, setCancelDraft] = useState({ open: false, orderId: "", reason: "Changed my mind" });
   const [supportDraft, setSupportDraft] = useState("");
   const [updatedOrders, setUpdatedOrders] = useState({});
@@ -254,10 +256,11 @@ export function CustomerApp() {
     }
   }
 
-  async function loadOrders(base = null) {
+  async function loadOrders(base = null, userOverride = undefined) {
     const q = new URLSearchParams();
     q.set("sessionId", sessionId);
-    if (user?.id) q.set("userId", user.id);
+    const activeUser = userOverride !== undefined ? userOverride : user;
+    if (activeUser?.id) q.set("userId", activeUser.id);
     const phone = localStorage.getItem("ck_last_phone") || "";
     if (phone) q.set("phone", phone);
     try {
@@ -548,18 +551,36 @@ export function CustomerApp() {
   }
 
   async function submitAuth() {
-    const endpoint = authMode === "register" ? "/api/auth/register" : "/api/auth/login";
-    const data = await api(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: authForm.username || "", password: authForm.password || "" })
-    });
-    setUser(data.user);
-    localStorage.setItem("ck_user", JSON.stringify(data.user));
-    setShowAuth(false);
-    setAuthForm({ username: "", password: "" });
-    await loadOrders();
-    flash(`${authMode} successful`);
+    if (isAuthLoading) return;
+    setIsAuthLoading(true);
+    try {
+      const endpoint = authMode === "register" ? "/api/auth/register" : "/api/auth/login";
+      const payload = {
+        username: authForm.username.trim(),
+        password: authForm.password,
+        ...(authMode === "register" ? { email: authForm.email.trim(), name: authForm.name.trim() } : {})
+      };
+      
+      const data = await api(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      setUser(data.user);
+      localStorage.setItem("ck_user", JSON.stringify(data.user));
+      setShowAuth(false);
+      setAuthForm({ username: "", password: "", email: "", name: "" });
+      setShowPassword(false);
+      
+      // Load orders immediately with the new user data to avoid state lag
+      await loadOrders(null, data.user);
+      flash(`${authMode === "register" ? "Account created" : "Login successful"}`);
+    } catch (error) {
+      flash(error.message || "Authentication failed. Please try again.");
+    } finally {
+      setIsAuthLoading(false);
+    }
   }
 
   function logout() {
@@ -825,28 +846,93 @@ export function CustomerApp() {
       ) : null}
 
       {showAuth ? (
-        <div className="backdrop show" onClick={() => setShowAuth(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Sign in or create account</h3>
-            <form
-              className="checkout"
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitAuth();
-              }}
-            >
-              <select value={authMode} onChange={(e) => setAuthMode(e.target.value)}>
-                <option value="login">Login</option>
-                <option value="register">Register</option>
-              </select>
-              <input
-                placeholder="Username"
-                value={authForm.username}
-                onChange={(e) => setAuthForm((p) => ({ ...p, username: e.target.value }))}
-              />
-              <input type="password" placeholder="Password" value={authForm.password} onChange={(e) => setAuthForm((p) => ({ ...p, password: e.target.value }))} />
-              <button className="btn accent full" type="submit">Submit</button>
-            </form>
+        <div className="backdrop show" onClick={() => (isAuthLoading ? null : setShowAuth(false))}>
+          <div className="modal auth-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="auth-tabs">
+              <button 
+                className={`auth-tab ${authMode === "login" ? "active" : ""}`} 
+                onClick={() => setAuthMode("login")}
+              >
+                Sign In
+              </button>
+              <button 
+                className={`auth-tab ${authMode === "register" ? "active" : ""}`} 
+                onClick={() => setAuthMode("register")}
+              >
+                New Account
+              </button>
+            </div>
+            
+            <div className="auth-content">
+              <h3>{authMode === "login" ? "Welcome Back" : "Create Account"}</h3>
+              <p className="auth-subtitle">
+                {authMode === "login" ? "Enter your credentials to access your account." : "Join us for a premium kitchen experience."}
+              </p>
+
+              <form
+                className="checkout auth-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  submitAuth();
+                }}
+              >
+                {authMode === "register" && (
+                  <>
+                    <input
+                      placeholder="Full Name"
+                      value={authForm.name}
+                      autoFocus
+                      required
+                      onChange={(e) => setAuthForm((p) => ({ ...p, name: e.target.value }))}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={authForm.email}
+                      required
+                      onChange={(e) => setAuthForm((p) => ({ ...p, email: e.target.value }))}
+                    />
+                  </>
+                )}
+                
+                <input
+                  placeholder="Username"
+                  value={authForm.username}
+                  autoFocus={authMode === "login"}
+                  required
+                  onChange={(e) => setAuthForm((p) => ({ ...p, username: e.target.value }))}
+                />
+                
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={authForm.password}
+                    required
+                    onChange={(e) => setAuthForm((p) => ({ ...p, password: e.target.value }))}
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+
+                <button className="btn accent full" type="submit" disabled={isAuthLoading}>
+                  {isAuthLoading ? "Verifying..." : authMode === "login" ? "Sign In" : "Register Now"}
+                </button>
+                
+                <p className="auth-footer">
+                  {authMode === "login" ? "Don't have an account?" : "Already have an account?"}
+                  <button type="button" className="text-btn" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
+                    {authMode === "login" ? "Register here" : "Sign in here"}
+                  </button>
+                </p>
+              </form>
+            </div>
           </div>
         </div>
       ) : null}

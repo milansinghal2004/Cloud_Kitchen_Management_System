@@ -817,42 +817,64 @@ async function handleApi(req, res, urlObj) {
 
   if (method === "POST" && pathname === "/api/auth/register") {
     const body = await parseBody(req);
+    const displayName = String(body.name || body.username || "").trim();
     const username = normalizeUsername(body.username || body.name || "");
     const emailInput = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
+
     if (!username || !password) return sendError(res, 400, "Username and password are required.");
     const passwordError = validatePasswordStrength(password, username);
     if (passwordError) return sendError(res, 400, passwordError);
+
     const email = emailInput || await generateUniqueEmail(username);
     const existing = await queryOne(
       `SELECT id FROM users
-       WHERE LOWER(COALESCE(username, name)) = LOWER($1)
+       WHERE LOWER(username) = LOWER($1)
           OR LOWER(email) = LOWER($2)`,
-      [username, email]
+       [username, email]
     );
-    if (existing) return sendError(res, 409, "User already exists.");
+    if (existing) return sendError(res, 409, "Username or email already exists.");
+
     const id = makeId("user");
     await pool.query(
       "INSERT INTO users (id, name, username, email, password_hash) VALUES ($1,$2,$3,$4,$5)",
-      [id, username, username, email, hashPassword(password)]
+      [id, displayName || username, username, email, hashPassword(password)]
     );
-    return sendJson(res, 201, { ok: true, user: { id, name: username, username, email } });
+    return sendJson(res, 201, { ok: true, user: { id, name: displayName || username, username, email } });
   }
 
   if (method === "POST" && pathname === "/api/auth/login") {
     const body = await parseBody(req);
-    const username = normalizeUsername(body.username || body.email || body.identifier || "");
+    const identifier = String(body.username || body.email || body.identifier || "").trim();
     const password = String(body.password || "");
-    if (!username || !password) return sendError(res, 400, "Username and password are required.");
+
+    if (!identifier || !password) return sendError(res, 400, "Username/email and password are required.");
+
+    // If identifier looks like an email, we don't normalize it like a username
+    const isEmail = identifier.includes("@");
+    const normalizedIdentifier = isEmail ? identifier.toLowerCase() : normalizeUsername(identifier);
+
     const user = await queryOne(
       `SELECT id, name, username, email, password_hash
        FROM users
-       WHERE LOWER(COALESCE(username, name)) = LOWER($1)
+       WHERE LOWER(username) = LOWER($1)
           OR LOWER(email) = LOWER($1)`,
-      [username]
+      [normalizedIdentifier]
     );
-    if (!user || !verifyPassword(password, user.password_hash)) return sendError(res, 401, "Invalid credentials.");
-    return sendJson(res, 200, { ok: true, user: { id: user.id, name: user.name || user.username || username, username: user.username || user.name || username, email: user.email } });
+
+    if (!user || !verifyPassword(password, user.password_hash)) {
+      return sendError(res, 401, "Invalid username or password.");
+    }
+
+    return sendJson(res, 200, {
+      ok: true,
+      user: {
+        id: user.id,
+        name: user.name || user.username || normalizedIdentifier,
+        username: user.username,
+        email: user.email
+      }
+    });
   }
 
   if (method === "POST" && pathname === "/api/admin/auth/login") {
