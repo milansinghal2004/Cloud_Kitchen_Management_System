@@ -27,3 +27,8 @@
   to = "https://ck-project.onrender.com/assets/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/customer-react/index.html"
+  status = 200

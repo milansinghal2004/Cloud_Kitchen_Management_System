@@ -1765,7 +1765,7 @@ async function handleStatic(req, res, urlObj) {
   } catch {
     // SPA Fallback logic for React Router
     let fallbackFile = "/customer-react/index.html";
-    if (urlObj.pathname.startsWith("/admin-react")) {
+    if (urlObj.pathname === "/admin-react" || urlObj.pathname.startsWith("/admin-react/")) {
       fallbackFile = "/admin-react/index.html";
     }
 
