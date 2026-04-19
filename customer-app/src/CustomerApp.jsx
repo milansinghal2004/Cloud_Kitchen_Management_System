@@ -99,6 +99,18 @@ export function CustomerApp() {
   }, [apiBase, user?.id]);
 
   useEffect(() => {
+    if (user) {
+      setCheckout(p => ({
+        ...p,
+        name: user.name || p.name,
+        phone: user.phone || p.phone,
+        address: user.address || p.address,
+        paymentMode: user.defaultPaymentMode || p.paymentMode
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (!apiBase || !window.EventSource) return;
     const stream = new EventSource(`${apiBase}/api/events?sessionId=${encodeURIComponent(sessionId)}`);
 
@@ -1541,12 +1553,6 @@ function LandingMenu({ menu, categories, search, setSearch, category, setCategor
             onChange={(e) => setSearch(e.target.value)} 
             placeholder="Search favorites..." 
             className="landing-search"
-          />
-          <CustomSelect 
-            value={category} 
-            onChange={(e) => setCategory(e.target.value)}
-            className="landing-select"
-            options={categories.map(c => ({ value: c, label: c }))}
           />
         </div>
       </div>

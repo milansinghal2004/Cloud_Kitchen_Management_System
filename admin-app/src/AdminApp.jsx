@@ -567,6 +567,9 @@ export function AdminApp() {
                     <button className="btn subtle" onClick={() => updateOrderStatus(order.id, "Out for Delivery")}>Out for Delivery</button>
                     <button className="btn subtle" onClick={() => updateOrderStatus(order.id, "Delivered")}>Delivered</button>
                   </div>
+                  {order.status === "Cancelled" && order.paymentStatus === "Paid" && String(order.paymentMode || "").toUpperCase() !== "COD" && (
+                    <div className="refund-alert">⚠️ REFUND/REVOKE ACTION REQUIRED</div>
+                  )}
                 </article>
               ))}
             </div>
@@ -624,6 +627,9 @@ export function AdminApp() {
                 <div className="admin-order-actions">
                   <button className="btn subtle" onClick={() => openOrder(order.id)}>Details</button>
                 </div>
+                {order.status === "Cancelled" && order.paymentStatus === "Paid" && String(order.paymentMode || "").toUpperCase() !== "COD" && (
+                  <div className="refund-alert">⚠️ REFUND/REVOKE ACTION REQUIRED</div>
+                )}
               </article>
               ))}
             </div>

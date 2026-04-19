@@ -972,6 +972,7 @@ select {
   backdrop-filter: blur(4px);
 }
 
+
 dialog {
   border: 0;
   border-radius: var(--radius);
@@ -1552,7 +1553,33 @@ dialog::backdrop {
   }
 }
 
-/* Footer Brand & Logo Fixes */
+.dish-card {
+  border-radius: 28px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+
+.dish-image {
+  border-radius: 28px 28px 0 0;
+}
+
+.special-card {
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+.feature-card {
+  border-radius: 32px;
+}
+
+.daily-card {
+  border-radius: 32px;
+}
+
+.promo-card {
+  border-radius: 32px;
+}
 .footer-brand {
   display: flex;
   align-items: center;
@@ -1566,6 +1593,18 @@ dialog::backdrop {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.cancel-modal-textarea {
+  width: 100%;
+  resize: none;
+  min-height: 100px;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  margin: 1rem 0;
+  font: inherit;
+  box-sizing: border-box;
 }
 
 .footer-brand strong {
@@ -1988,8 +2027,9 @@ dialog::backdrop {
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
-  padding: 1rem 2rem 3rem;
-  /* Space for shadow and tooltips below */
+  padding: 4.5rem 2rem 3rem;
+  margin-top: -3.5rem;
+  /* Space for vertical tooltips above and shadow below */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -2136,7 +2176,7 @@ dialog::backdrop {
     flex: 0 0 280px;
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
-    border-radius: 24px;
+    border-radius: 32px;
     border: 1px solid rgba(255, 255, 255, 0.5);
     padding: 1.5rem;
     scroll-snap-align: start;

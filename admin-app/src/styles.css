@@ -226,3 +226,23 @@ input, select { border: 1px solid var(--line); border-radius: 10px; padding: 0.6
   .section-head { flex-direction: column; align-items: stretch; }
   .chef-grid { grid-template-columns: 1fr; }
 }
+
+.refund-alert {
+  background: #fff5f5;
+  color: #c53030;
+  border: 1.5px solid #feb2b2;
+  padding: 0.6rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  margin-top: 0.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0% { border-color: #feb2b2; box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.4); }
+  70% { border-color: #f56565; box-shadow: 0 0 0 10px rgba(245, 101, 101, 0); }
+  100% { border-color: #feb2b2; }
+}
