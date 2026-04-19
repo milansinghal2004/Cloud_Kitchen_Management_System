@@ -1957,7 +1957,6 @@ dialog::backdrop {
   border-radius: 20px;
   aspect-ratio: 1 / 1.05;
   box-shadow: 0 8px 24px rgba(0,0,0,0.03);
-  overflow: hidden;
   position: relative;
   transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -2111,7 +2110,6 @@ dialog::backdrop {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 3px solid #fff;
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   display: block;
@@ -2121,7 +2119,6 @@ dialog::backdrop {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 3px solid #fff;
   background: #f8f6f4;
   color: var(--muted);
   font-size: 0.78rem;
