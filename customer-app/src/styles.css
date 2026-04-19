@@ -1890,7 +1890,7 @@ dialog::backdrop {
   overflow-x: scroll;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
-  padding: 1rem 0.5rem 2rem;
+  padding: 3rem 2rem 2rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
