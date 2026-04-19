@@ -838,11 +838,11 @@ async function handleApi(req, res, urlObj) {
     const password = String(body.password || "");
 
     if (!password) return sendError(res, 400, "Password is required.");
-    
+
     // Ensure we have a valid username
     username = await ensureUniqueUsername(body.username || body.name || emailInput.split("@")[0] || "user");
 
-    
+
     const passwordError = validatePasswordStrength(password, username);
     if (passwordError) return sendError(res, 400, passwordError);
 
@@ -850,7 +850,7 @@ async function handleApi(req, res, urlObj) {
     const existing = await queryOne(
       `SELECT id FROM users
        WHERE LOWER(email) = LOWER($1)`,
-       [email]
+      [email]
     );
     if (existing) return sendError(res, 409, "An account with this email already exists.");
 
@@ -951,12 +951,12 @@ async function handleApi(req, res, urlObj) {
           // Better way: Check if user is logged in and has orders, OR if sessionId has orders
           // Actually, let's just check if current sessionId or the user ID associated with this session has any past non-cancelled orders.
           const userCheck = await queryOne("SELECT id FROM users WHERE id IN (SELECT id FROM users WHERE email IN (SELECT email FROM users WHERE id = (SELECT id FROM carts WHERE session_id = $1 LIMIT 1)))", [sessionId]); // This is complex
-          
+
           // Simplified: Just check if this sessionId OR any user associated with this sessionId in the 'orders' table has orders.
           const hasPastOrders = await queryOne(
             `SELECT 1 FROM orders 
              WHERE (session_id = $1 OR (user_id IS NOT NULL AND user_id IN (SELECT user_id FROM orders WHERE session_id = $1)))
-             AND status <> 'Cancelled' LIMIT 1`, 
+             AND status <> 'Cancelled' LIMIT 1`,
             [sessionId]
           );
           if (hasPastOrders) isEligible = false;
@@ -1397,10 +1397,10 @@ async function handleApi(req, res, urlObj) {
     }
 
     const currentOrders = orders.filter((o) => o.status !== "Delivered" && o.status !== "Cancelled");
-    
+
     // SECURITY: Only return past orders if the user is authenticated with a userId.
     // This prevents random guest sessions from listing entire device histories.
-    const pastOrders = userId 
+    const pastOrders = userId
       ? orders.filter((o) => o.status === "Delivered" || o.status === "Cancelled")
       : [];
 
