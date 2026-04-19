@@ -1395,9 +1395,17 @@ async function handleApi(req, res, urlObj) {
       const hist = histRes.rows.map((h) => ({ status: h.status, at: h.created_at, note: h.note || "" }));
       orders.push(toOrderDto(row, itemsRes.rows, hist));
     }
+
     const currentOrders = orders.filter((o) => o.status !== "Delivered" && o.status !== "Cancelled");
-    const pastOrders = orders.filter((o) => o.status === "Delivered" || o.status === "Cancelled");
+    
+    // SECURITY: Only return past orders if the user is authenticated with a userId.
+    // This prevents random guest sessions from listing entire device histories.
+    const pastOrders = userId 
+      ? orders.filter((o) => o.status === "Delivered" || o.status === "Cancelled")
+      : [];
+
     return sendJson(res, 200, { ok: true, currentOrders, pastOrders });
+
   }
 
   if (method === "GET" && pathname.startsWith("/api/orders/") && pathname.endsWith("/support")) {

@@ -1589,7 +1589,19 @@ function OrderCard({ order, onDetails, onCancel, onReorder, onPay, highlightType
           <span className="sq-date">{dateStr}</span>
         </div>
 
+        {/* Progress Bar */}
+        <div className="sq-progress-container">
+           <div className={`sq-progress-line ${statusClass}`}></div>
+           <div className="sq-progress-steps">
+              <div className={`sq-step ${['Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}></div>
+              <div className={`sq-step ${['Preparing', 'Out for Delivery', 'Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}></div>
+              <div className={`sq-step ${['Out for Delivery', 'Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}></div>
+              <div className={`sq-step ${['Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}></div>
+           </div>
+        </div>
+
         <div className="sq-item-avatars">
+
           {displayItems.map((item, i) => (
             <div 
               key={`${order.id}-item-${i}`} 
