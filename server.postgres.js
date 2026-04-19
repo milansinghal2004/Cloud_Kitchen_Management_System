@@ -1731,10 +1731,19 @@ async function handleApi(req, res, urlObj) {
 
 async function handleStatic(req, res, urlObj) {
   let pathname = urlObj.pathname;
-  if (pathname === "/") pathname = "/index.html";
+
+  // Root path now serves the Customer React app
+  if (pathname === "/") {
+    pathname = "/customer-react/index.html";
+  }
+
   const safePath = path.normalize(pathname).replace(/^(\.\.[/\\])+/, "");
   const filePath = path.join(PUBLIC_DIR, safePath);
-  if (!filePath.startsWith(PUBLIC_DIR)) return sendError(res, 403, "Forbidden");
+
+  if (!filePath.startsWith(PUBLIC_DIR)) {
+    return sendError(res, 403, "Forbidden");
+  }
+
   try {
     const stat = await fsp.stat(filePath);
     if (stat.isDirectory()) {
@@ -1743,6 +1752,7 @@ async function handleStatic(req, res, urlObj) {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(content);
     }
+
     const ext = path.extname(filePath).toLowerCase();
     const contentType = contentTypes[ext] || "application/octet-stream";
     const stream = fs.createReadStream(filePath);
@@ -1753,10 +1763,21 @@ async function handleStatic(req, res, urlObj) {
     });
     stream.pipe(res);
   } catch {
-    const indexPath = path.join(PUBLIC_DIR, "index.html");
-    const content = await fsp.readFile(indexPath);
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    res.end(content);
+    // SPA Fallback logic for React Router
+    let fallbackFile = "/customer-react/index.html";
+    if (urlObj.pathname.startsWith("/admin-react")) {
+      fallbackFile = "/admin-react/index.html";
+    }
+
+    try {
+      const indexPath = path.join(PUBLIC_DIR, fallbackFile);
+      const content = await fsp.readFile(indexPath);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(content);
+    } catch {
+      // If even the fallback fails, return a 404
+      sendError(res, 404, "File not found");
+    }
   }
 }
 
