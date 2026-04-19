@@ -106,12 +106,26 @@ function normalizeUsername(value) {
 }
 
 function slugifyUsername(value) {
-  return normalizeUsername(value)
-    .toLowerCase()
+  const val = String(value || "").trim().toLowerCase();
+  if (!val) return "user." + crypto.randomBytes(2).toString("hex");
+  return val
     .replace(/[^a-z0-9]+/g, ".")
     .replace(/^\.+|\.+$/g, "")
-    .replace(/\.\.+/g, ".") || "user";
+    .replace(/\.\.+/g, ".") || "user." + crypto.randomBytes(2).toString("hex");
 }
+
+async function ensureUniqueUsername(base) {
+  let username = slugifyUsername(base);
+  let attempt = 1;
+  while (attempt < 10) {
+    const existing = await queryOne("SELECT id FROM users WHERE LOWER(username) = LOWER($1)", [username]);
+    if (!existing) return username;
+    username = `${slugifyUsername(base)}${attempt}`;
+    attempt++;
+  }
+  return `${slugifyUsername(base)}${crypto.randomBytes(2).toString("hex")}`;
+}
+
 
 function validatePasswordStrength(password, username = "") {
   const value = String(password || "");
@@ -822,18 +836,21 @@ async function handleApi(req, res, urlObj) {
     const emailInput = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
 
-    if (!username || !password) return sendError(res, 400, "Username and password are required.");
+    if (!password) return sendError(res, 400, "Password is required.");
+    
+    // Ensure we have a valid username
+    const username = await ensureUniqueUsername(body.username || body.name || emailInput.split("@")[0] || "user");
+    
     const passwordError = validatePasswordStrength(password, username);
     if (passwordError) return sendError(res, 400, passwordError);
 
     const email = emailInput || await generateUniqueEmail(username);
     const existing = await queryOne(
       `SELECT id FROM users
-       WHERE LOWER(username) = LOWER($1)
-          OR LOWER(email) = LOWER($2)`,
-       [username, email]
+       WHERE LOWER(email) = LOWER($1)`,
+       [email]
     );
-    if (existing) return sendError(res, 409, "Username or email already exists.");
+    if (existing) return sendError(res, 409, "An account with this email already exists.");
 
     const id = makeId("user");
     await pool.query(
@@ -841,6 +858,7 @@ async function handleApi(req, res, urlObj) {
       [id, displayName || username, username, email, hashPassword(password)]
     );
     return sendJson(res, 201, { ok: true, user: { id, name: displayName || username, username, email } });
+
   }
 
   if (method === "POST" && pathname === "/api/auth/login") {
