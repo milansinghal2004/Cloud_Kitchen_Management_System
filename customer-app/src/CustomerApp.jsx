@@ -80,11 +80,13 @@ export function CustomerApp() {
   const [supportDraft, setSupportDraft] = useState("");
   const [replyDrafts, setReplyDrafts] = useState({});
   const [updatedOrders, setUpdatedOrders] = useState({});
+  const [dialog, setDialog] = useState({ open: false, title: "", message: "", resolve: null, type: "confirm" });
 
   const sessionId = useMemo(loadOrCreateSessionId, []);
   const cartCount = useMemo(() => (cart.items || []).reduce((sum, i) => sum + Number(i.quantity || 0), 0), [cart]);
   const navigate = useNavigate();
   const paymentResolveRef = useRef(null);
+  const isClearingRef = useRef(false);
 
   useEffect(() => {
     bootstrap();
@@ -135,6 +137,9 @@ export function CustomerApp() {
     });
 
     stream.addEventListener("cart_updated", async () => {
+      // If we are currently clearing the cart, ignore the updated event 
+      // as we are already handling the state transition locally.
+      if (isClearingRef.current) return;
       await loadCart();
     });
 
@@ -149,6 +154,12 @@ export function CustomerApp() {
       const tag = String(target?.tagName || "").toLowerCase();
       const isTextArea = tag === "textarea";
       if (event.key === "Escape") {
+        if (dialog.open) {
+          event.preventDefault();
+          setDialog(p => ({ ...p, open: false }));
+          dialog.resolve(false);
+          return;
+        }
         if (paymentPortal.open) {
           event.preventDefault();
           cancelMockPayment();
@@ -315,7 +326,8 @@ export function CustomerApp() {
 
   async function loadCart(base = null) {
     try {
-      const data = await api(`/api/cart?sessionId=${encodeURIComponent(sessionId)}`, {}, base);
+      // Add cache-busting timestamp to ensure we don't get stale data
+      const data = await api(`/api/cart?sessionId=${encodeURIComponent(sessionId)}&_t=${Date.now()}`, {}, base);
       setCart(data.cart || { items: [], pricing: {} });
       setOfferCode(data.cart?.offerCode || "");
     } catch {
@@ -358,14 +370,33 @@ export function CustomerApp() {
     await loadCart();
   }
 
+  async function confirmAction(title, message, type = "confirm") {
+    return new Promise((resolve) => {
+      setDialog({ open: true, title, message, resolve, type });
+    });
+  }
+
   async function clearCart() {
     if (!cart.items?.length) return;
+    const confirmed = await confirmAction("Empty Cart?", "Are you sure you want to remove all items from your cart?");
+    if (!confirmed) return;
+    
+    // Optimistic update
+    setCart({ items: [], pricing: { subtotal: 0, total: 0, discount: 0 } });
+    isClearingRef.current = true;
+    
     try {
       await api(`/api/cart?sessionId=${encodeURIComponent(sessionId)}`, { method: "DELETE" });
-      await loadCart();
       flash("Cart cleared");
     } catch (e) {
+      // Re-load if failed
+      await loadCart();
       flash("Failed to clear cart", "error");
+    } finally {
+      // Small delay to ensure any pending SSE events from the DELETE are ignored
+      setTimeout(() => {
+        isClearingRef.current = false;
+      }, 1000);
     }
   }
 
@@ -379,20 +410,20 @@ export function CustomerApp() {
       });
       
       if (data.status === "valid") {
-        setCouponBlink("green");
+        setCouponBlink("success"); // Triggers apply-success-glow
         flash(data.message || "Offer applied");
       } else if (data.status === "not_met") {
-        setCouponBlink("yellow");
+        setCouponBlink("warning");
         flash(data.message, "warning");
       } else {
-        setCouponBlink("red");
+        setCouponBlink("error");
         flash(data.message || "Invalid coupon", "error");
       }
       
       setTimeout(() => setCouponBlink(null), 1800);
       await loadCart();
     } catch (e) {
-      setCouponBlink("red");
+      setCouponBlink("error");
       setTimeout(() => setCouponBlink(null), 1800);
       flash("Failed to apply offer", "error");
     }
@@ -679,7 +710,9 @@ export function CustomerApp() {
     }
   }
 
-  function logout() {
+  async function logout() {
+    const confirmed = await confirmAction("Sign Out?", "Are you sure you want to log out of your account?");
+    if (!confirmed) return;
     setUser(null);
     localStorage.removeItem("ck_user");
     setShowProfileDropdown(false);
@@ -1341,20 +1374,31 @@ export function CustomerApp() {
       {cancelDraft.open ? (
         <div className="backdrop show" onClick={() => setCancelDraft({ open: false, orderId: "", reason: "Changed my mind" })}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Cancel order?</h3>
-            <p>This action updates customer timeline immediately.</p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                confirmCancel();
-              }}
-            >
-              <textarea rows={3} value={cancelDraft.reason} onChange={(e) => setCancelDraft((p) => ({ ...p, reason: e.target.value }))} />
-              <div className="actions-row">
-                <button type="button" className="btn subtle" onClick={() => setCancelDraft({ open: false, orderId: "", reason: "Changed my mind" })}>Keep Order</button>
-                <button type="submit" className="btn accent">Confirm Cancel</button>
-              </div>
-            </form>
+            <div className="modal-header">
+              <h3>Cancel order?</h3>
+            </div>
+            <div className="modal-body">
+              <p>This action updates customer timeline immediately. Please provide a reason.</p>
+              <form
+                id="cancel-order-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  confirmCancel();
+                }}
+              >
+                <textarea 
+                  className="cancel-modal-textarea"
+                  rows={3} 
+                  placeholder="Reason for cancellation..."
+                  value={cancelDraft.reason} 
+                  onChange={(e) => setCancelDraft((p) => ({ ...p, reason: e.target.value }))} 
+                />
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn subtle" onClick={() => setCancelDraft({ open: false, orderId: "", reason: "Changed my mind" })}>Keep Order</button>
+              <button type="submit" form="cancel-order-form" className="btn accent">Confirm Cancellation</button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -1409,6 +1453,27 @@ export function CustomerApp() {
           </div>
         </div>
       ) : null}
+
+      {dialog.open && (
+        <div className="backdrop show" style={{ zIndex: 3000 }} onClick={() => (setDialog(p => ({ ...p, open: false })), dialog.resolve(false))}>
+          <div className="modal themed-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{dialog.title}</h3>
+            </div>
+            <div className="modal-body">
+              <p>{dialog.message}</p>
+            </div>
+            <div className="modal-footer">
+              {dialog.type === "confirm" && (
+                <button className="btn subtle" onClick={() => (setDialog(p => ({ ...p, open: false })), dialog.resolve(false))}>Cancel</button>
+              )}
+              <button className="btn accent" onClick={() => (setDialog(p => ({ ...p, open: false })), dialog.resolve(true))}>
+                {dialog.type === "confirm" ? "Confirm" : "OK"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1612,12 +1677,20 @@ function UnifiedHomePage(props) {
   );
 }
 
-function CartQtyControl({ id, quantity, updateQty }) {
+function CartQtyControl({ id, quantity, updateQty, addToCart }) {
+  if (quantity <= 0) {
+    return (
+      <button className="btn accent full add-cart-btn" onClick={(e) => { e.stopPropagation(); addToCart(id); }}>
+        ADD
+      </button>
+    );
+  }
+
   return (
-    <div className="qty-row-menu">
-      <button onClick={(e) => { e.stopPropagation(); updateQty(id, quantity - 1); }}>-</button>
-      <span>{quantity}</span>
-      <button onClick={(e) => { e.stopPropagation(); updateQty(id, quantity + 1); }}>+</button>
+    <div className="modern-qty-ctrl">
+      <button className="qty-btn minus" onClick={(e) => { e.stopPropagation(); updateQty(id, quantity - 1); }}>-</button>
+      <span className="qty-count">{quantity}</span>
+      <button className="qty-btn plus" onClick={(e) => { e.stopPropagation(); updateQty(id, quantity + 1); }}>+</button>
     </div>
   );
 }
@@ -1764,14 +1837,12 @@ function MenuPage({ menu, categories, search, setSearch, category, setCategory, 
                   <strong className="price">Rs {item.price}</strong>
                   <span className="prep">{item.prepMinutes} mins</span>
                 </div>
-                {(() => {
-                  const inCart = cart.items?.find(i => i.id === item.id);
-                  return inCart ? (
-                    <CartQtyControl id={item.id} quantity={inCart.quantity} updateQty={updateQty} />
-                  ) : (
-                    <button className="btn accent full" onClick={() => addToCart(item.id)}>Add to cart</button>
-                  );
-                })()}
+                <CartQtyControl 
+                  id={item.id} 
+                  quantity={cart.items?.find(i => i.id === item.id)?.quantity || 0} 
+                  updateQty={updateQty} 
+                  addToCart={addToCart} 
+                />
               </div>
             </article>
           ))}
@@ -1933,10 +2004,13 @@ function CartBody({ cart, apiBase, updateQty, clearCart, offerCode, setOfferCode
             <div>
               <strong>{item.name}</strong>
               <p>Rs {item.price}</p>
-              <div className="qty-row">
-                <button onClick={() => updateQty(item.id, item.quantity - 1)}>-</button>
-                <span>{item.quantity}</span>
-                <button onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
+              <div style={{ marginTop: '0.4rem', width: '100px' }}>
+                <CartQtyControl 
+                  id={item.id} 
+                  quantity={item.quantity} 
+                  updateQty={updateQty} 
+                  addToCart={() => {}} 
+                />
               </div>
             </div>
           </div>
@@ -1954,7 +2028,7 @@ function CartBody({ cart, apiBase, updateQty, clearCart, offerCode, setOfferCode
         }}
       >
         <input value={offerCode} onChange={(e) => setOfferCode(e.target.value)} placeholder="Apply offer code" />
-        <button className={`btn accent ${couponBlink ? `blink-${couponBlink}` : ""}`} type="submit">
+        <button className={`btn accent ${couponBlink === "success" ? "apply-success-glow" : ""}`} type="submit">
           Apply
         </button>
       </form>
