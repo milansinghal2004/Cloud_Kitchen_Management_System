@@ -411,7 +411,11 @@ export function CustomerApp() {
     isClearingRef.current = true;
     
     try {
-      await api(`/api/cart?sessionId=${encodeURIComponent(sessionId)}`, { method: "DELETE" });
+      await api(`/api/cart/clear`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId })
+      });
       flash("Cart cleared");
     } catch (e) {
       // Re-load if failed

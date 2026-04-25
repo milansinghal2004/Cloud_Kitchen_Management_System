@@ -1128,14 +1128,14 @@ async function handleApi(req, res, urlObj) {
     return sendJson(res, 200, { ok: true });
   }
 
-  if (method === "DELETE" && pathname === "/api/cart") {
-    const sessionId = String(urlObj.searchParams.get("sessionId") || "").trim();
+  if (method === "POST" && pathname === "/api/cart/clear") {
+    const body = await parseBody(req);
+    const sessionId = String(body.sessionId || "").trim();
     if (!sessionId) return sendError(res, 400, "sessionId is required.");
-    // Clear items and reset offer
-    await Promise.all([
-      pool.query("DELETE FROM cart_items WHERE session_id = $1", [sessionId]),
-      pool.query("UPDATE carts SET offer_code = '' WHERE session_id = $1", [sessionId])
-    ]);
+    
+    // Completely remove the cart record. ON DELETE CASCADE will clear items.
+    await pool.query("DELETE FROM carts WHERE session_id = $1", [sessionId]);
+    
     emitRealtimeUpdate(sessionId, "cart_updated", { sessionId });
     return sendJson(res, 200, { ok: true });
   }
@@ -1819,8 +1819,6 @@ async function handleApi(req, res, urlObj) {
     if (updated?.sessionId) emitRealtimeUpdate(updated.sessionId, "order_updated", { orderId, status: updated.status });
     return sendJson(res, 200, { ok: true, order: updated });
   }
-  }
-
 
   if (method === "POST" && pathname.startsWith("/api/admin/orders/") && pathname.endsWith("/payment-status")) {
     if (!isAdminAuthorized(req)) return sendError(res, 401, "Invalid admin key.");
