@@ -148,9 +148,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
   <a href="mailto:singhalmilan92@gmail.com">
     <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"/>
   </a>
-  <a href="https://portfolio-milansinghal.netlify.app/">
-    <img src="https://img.shields.io/badge/Portfolio-FF5733?style=for-the-badge&logo=googledomains&logoColor=white" alt="Portfolio"/>
-  </a>
 </p>
 
 ---
