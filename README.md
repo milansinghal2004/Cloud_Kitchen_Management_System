@@ -47,30 +47,19 @@ Most cloud kitchens lose 25-30% revenue to delivery platforms. **Cloud Kitchen S
 ### 🛍️ Customer Ordering Experience
 A high-conversion, mobile-responsive storefront featuring a modern glassmorphism design.
 
-````carousel
 ![Landing Page](./Images/Customer_Site/landing_page.png)
-<!-- slide -->
 ![Menu Discovery](./Images/Customer_Site/menu_page.png)
-<!-- slide -->
 ![Daily Specials](./Images/Customer_Site/specials.png)
-<!-- slide -->
 ![Smart Cart](./Images/Customer_Site/cart_page.png)
-<!-- slide -->
 ![Order Tracking](./Images/Customer_Site/orders_page.png)
-<!-- slide -->
 ![Payments](./Images/Customer_Site/payments_page.png)
-````
 
 ### 👨‍💼 Admin Management Portal
 The command center for kitchen managers, providing deep insights into operations and performance.
 
-````carousel
 ![Admin Overview](./Images/Admin_Portal/admin_landing.png)
-<!-- slide -->
 ![Deep Analytics](./Images/Admin_Portal/admin_analytics.png)
-<!-- slide -->
 ![Order History](./Images/Admin_Portal/admin_pastOrders.png)
-````
 
 ## 🛠️ Installation & Setup
 
