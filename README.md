@@ -1,6 +1,19 @@
-# Cloud Kitchen Startup Mode
+![Banner](./Images/banner.png)
 
-A modern, full-stack **Direct-to-Consumer (D2C)** food technology platform designed to empower independent **cloud kitchens**. This end-to-end solution replaces third-party dependency with a premium, self-hosted ordering system and a robust **restaurant management dashboard**.
+# 🍔 Cloud Kitchen Management Dashboard
+
+A modern, full-stack **Direct-to-Consumer (D2C)** food technology platform designed to empower independent **cloud kitchens**. Reclaim your margins by replacing third-party dependencies with a premium, self-hosted ordering system and a robust **restaurant management suite**.
+
+> **Production-ready** full-stack platform featuring a high-conversion customer ordering website and an advanced Admin/Manager portal to manage chefs, orders, payments, and business analytics in one unified system.
+
+### 🌟 Key Highlights
+- **Direct-to-Consumer (D2C)**: Reclaim 25-30% revenue lost to delivery platforms.
+- **Full-Stack & Production Ready**: End-to-end solution from ordering to delivery.
+- **Unified Management**: One dashboard to manage chefs, live orders, and payments.
+- **Business Intelligence**: Deep-dive analytics for revenue, products, and customers.
+- **Real-Time Efficiency**: Instant status updates powered by Server-Sent Events (SSE).
+
+
 
 ![Branding](https://img.shields.io/badge/UI-Glassmorphism-brightgreen)
 ![Tech](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20PostgreSQL-blue)
@@ -81,13 +94,17 @@ The command center for kitchen managers, providing deep insights into operations
   </tr>
 </table>
 
+<p align="center">
+  <b>⭐ If you like this project, consider starring the repository to support its development!</b>
+</p>
+
 ## 🛠️ Installation & Setup
 
 1. **Clone & Install**:
 
    ```bash
-   git clone https://github.com/milansinghal2004/Cloud_Kitchen_Management_System.git
-   cd Cloud_Kitchen_Management_System
+   git clone https://github.com/milansinghal2004/cloud-kitchen-management-dashboard.git
+   cd cloud-kitchen-management-dashboard
    npm install
    ```
 
