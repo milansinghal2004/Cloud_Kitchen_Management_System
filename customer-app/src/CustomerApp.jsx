@@ -411,7 +411,7 @@ export function CustomerApp() {
     isClearingRef.current = true;
     
     try {
-      await api(`/api/cart/clear`, { 
+      await api(`/api/cart/clear?sessionId=${encodeURIComponent(sessionId)}`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId })

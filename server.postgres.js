@@ -1128,16 +1128,18 @@ async function handleApi(req, res, urlObj) {
     return sendJson(res, 200, { ok: true });
   }
 
-  if (method === "POST" && pathname === "/api/cart/clear") {
-    const body = await parseBody(req);
-    const sessionId = String(body.sessionId || "").trim();
+  if ((method === "POST" || method === "DELETE") && pathname.startsWith("/api/cart/clear")) {
+    const body = await parseBody(req).catch(() => ({}));
+    const sessionId = String(body.sessionId || urlObj.searchParams.get("sessionId") || "").trim();
     if (!sessionId) return sendError(res, 400, "sessionId is required.");
     
-    // Completely remove the cart record. ON DELETE CASCADE will clear items.
-    await pool.query("DELETE FROM carts WHERE session_id = $1", [sessionId]);
+    // More robust clear: remove items and clear offer instead of deleting the cart record
+    // This avoids potential foreign key issues and is more environment-resilient.
+    await pool.query("DELETE FROM cart_items WHERE session_id = $1", [sessionId]);
+    await pool.query("UPDATE carts SET offer_code = '', updated_at = NOW() WHERE session_id = $1", [sessionId]);
     
     emitRealtimeUpdate(sessionId, "cart_updated", { sessionId });
-    return sendJson(res, 200, { ok: true });
+    return sendJson(res, 200, { ok: true, message: "Cart cleared" });
   }
 
   if (method === "POST" && pathname === "/api/cart/offer") {

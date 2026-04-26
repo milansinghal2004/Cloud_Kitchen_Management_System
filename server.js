@@ -559,6 +559,21 @@ async function handleApi(req, res, urlObj) {
     return sendJson(res, 200, { ok: true });
   }
 
+  if ((method === "POST" || method === "DELETE") && pathname.startsWith("/api/cart/clear")) {
+    const body = await parseBody(req).catch(() => ({}));
+    const sessionId = String(body.sessionId || urlObj.searchParams.get("sessionId") || "").trim();
+    if (!sessionId) return sendError(res, 400, "sessionId is required.");
+    
+    if (carts[sessionId]) {
+      carts[sessionId].items = [];
+      carts[sessionId].offerCode = "";
+      await writeJson(DATA_FILES.carts, carts);
+    }
+    
+    emitRealtimeUpdate(sessionId, "cart_updated", { sessionId });
+    return sendJson(res, 200, { ok: true, message: "Cart cleared" });
+  }
+
   if (method === "DELETE" && pathname.startsWith("/api/cart/item/")) {
     const sessionId = String(urlObj.searchParams.get("sessionId") || "").trim();
     const itemId = pathname.split("/").pop();
