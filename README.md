@@ -36,30 +36,42 @@ Most cloud kitchens lose 25-30% revenue to delivery platforms. **Cloud Kitchen S
 - **Real-time Engine**: Built-in SSE implementation for instant push notifications from the kitchen to the customer.
 - **Responsive Architecture**: Fully optimized for mobile-first ordering and desktop-first management.
 
-## 💻 Tech Stack
-- **Frontend**: React (SPA), Vanilla CSS (Custom Glassmorphism Framework)
-- **Backend**: Node.js, Express
-- **Database**: PostgreSQL / JSON-based Flat Files
-- **Communication**: Server-Sent Events (SSE) for real-time reactivity
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React, Vanilla CSS (Glassmorphism), Vite |
+| **Backend** | Node.js, Express.js |
+| **Database** | PostgreSQL (Production), JSON Flat-file (Proto) |
+| **Real-time** | Server-Sent Events (SSE) |
+| **Deployment** | Netlify (Frontend), Render (Backend) |
 
 ## 📸 Screenshots
 
 ### 🛍️ Customer Ordering Experience
 A high-conversion, mobile-responsive storefront featuring a modern glassmorphism design.
 
-![Landing Page](./Images/Customer_Site/landing_page.png)
-![Menu Discovery](./Images/Customer_Site/menu_page.png)
-![Daily Specials](./Images/Customer_Site/specials.png)
-![Smart Cart](./Images/Customer_Site/cart_page.png)
-![Order Tracking](./Images/Customer_Site/orders_page.png)
-![Payments](./Images/Customer_Site/payments_page.png)
+<table width="100%">
+  <tr>
+    <td width="33%"><img src="./Images/Customer_Site/landing_page.png" alt="Landing Page"/></td>
+    <td width="33%"><img src="./Images/Customer_Site/menu_page.png" alt="Menu Discovery"/></td>
+    <td width="33%"><img src="./Images/Customer_Site/specials.png" alt="Daily Specials"/></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="./Images/Customer_Site/cart_page.png" alt="Smart Cart"/></td>
+    <td width="33%"><img src="./Images/Customer_Site/orders_page.png" alt="Order Tracking"/></td>
+    <td width="33%"><img src="./Images/Customer_Site/payments_page.png" alt="Payments"/></td>
+  </tr>
+</table>
 
 ### 👨‍💼 Admin Management Portal
 The command center for kitchen managers, providing deep insights into operations and performance.
 
-![Admin Overview](./Images/Admin_Portal/admin_landing.png)
-![Deep Analytics](./Images/Admin_Portal/admin_analytics.png)
-![Order History](./Images/Admin_Portal/admin_pastOrders.png)
+<table width="100%">
+  <tr>
+    <td width="33%"><img src="./Images/Admin_Portal/admin_landing.png" alt="Admin Overview"/></td>
+    <td width="33%"><img src="./Images/Admin_Portal/admin_analytics.png" alt="Deep Analytics"/></td>
+    <td width="33%"><img src="./Images/Admin_Portal/admin_pastOrders.png" alt="Order History"/></td>
+  </tr>
+</table>
 
 ## 🛠️ Installation & Setup
 
@@ -89,10 +101,23 @@ The command center for kitchen managers, providing deep insights into operations
 - [ ] **Inventory Management**: Automated stock alerts and ingredient level tracking.
 - [ ] **Multi-Outlet Support**: Manage multiple kitchen locations from a single master dashboard.
 
+## 🤝 Contributing
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more information.
+
 ## 👤 Author
-**Milan Singhal** — [GitHub](https://github.com/milansinghal2004)
+**Milan Singhal** — [GitHub](https://github.com/milansinghal2004) — [LinkedIn](https://linkedin.com/in/milansinghal)
 
 ---
 
-### Searchable Keywords (SEO)
-`Cloud Kitchen Management System`, `Direct-to-Consumer Food Delivery`, `Restaurant Admin Dashboard`, `Real-time Order Tracking`, `React Food App`, `Kitchen Operations Software`, `Chef Management System`, `Online Food Ordering Flow`, `Glassmorphism UI Design`, `Food Tech Platform`, `Restaurant Analytics Software`, `Independent Kitchen Software`, `D2C Restaurant Tech`, `Ghost Kitchen Management`, `SaaS for Food Startups`.
+### 🏷️ Project Topics
+`Cloud Kitchen` • `Food Delivery` • `Restaurant Admin` • `Real-time SSE` • `React.js` • `Node.js` • `PostgreSQL` • `Glassmorphism` • `D2C Tech` • `Ghost Kitchen`
+
