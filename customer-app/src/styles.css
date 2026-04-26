@@ -3345,6 +3345,9 @@ dialog::backdrop {
 }
 
 .payments-grid-new {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
   margin-top: 1rem;
 }
 
@@ -3626,19 +3629,170 @@ dialog::backdrop {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.payment-card-new {
+.payment-card-premium {
   background: #fff;
-  border-radius: 24px;
-  padding: 1.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s ease;
-  cursor: pointer;
+  border-radius: 28px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
 }
 
-.payment-card-new:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+.payment-card-premium:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
+}
+
+.card-top-accent {
+  height: 6px;
+  background: linear-gradient(90deg, #f43f5e, #fb7185);
+  width: 100%;
+}
+
+.payment-card-premium.paid .card-top-accent {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.payment-card-premium.submitted .card-top-accent {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.payment-card-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.card-header .order-id {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.status-icon-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-icon-pill.pending { background: #fff1f2; color: #e11d48; }
+.status-icon-pill.paid { background: #f0fdf4; color: #166534; }
+.status-icon-pill.submitted { background: #eff6ff; color: #1e40af; }
+
+.card-body-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.amount-display {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.currency-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.amount-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.amount-value .rs {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3f3f46;
+}
+
+.amount-value .num {
+  font-size: 2.2rem;
+  font-weight: 900;
+  font-family: "Playfair Display", serif;
+  color: #18181b;
+  line-height: 1;
+}
+
+.payment-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #64748b;
+  width: fit-content;
+}
+
+.card-actions-premium {
+  display: flex;
+  gap: 0.8rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.btn-view, .btn-pay-now {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-view {
+  background: #f4f4f5;
+  color: #27272a;
+}
+
+.btn-view:hover {
+  background: #e4e4e7;
+}
+
+.btn-pay-now {
+  background: linear-gradient(135deg, #f43f5e, #fb7185);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
+}
+
+.btn-pay-now:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 15px rgba(244, 63, 94, 0.3);
+}
+
+.btn-pay-now:disabled {
+  opacity: 0.6;
+  transform: none;
 }
 
 .payments-unified-bar .search-wrap-new {
