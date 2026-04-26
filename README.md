@@ -1,124 +1,109 @@
 # Cloud Kitchen Startup Mode
 
-Responsive full-stack cloud kitchen web app built from your Figma export:
+A modern, full-stack **Direct-to-Consumer (D2C)** food technology platform designed to empower independent **cloud kitchens**. This end-to-end solution replaces third-party dependency with a premium, self-hosted ordering system and a robust **restaurant management dashboard**.
 
-- `Node.js` backend (no external packages) in [server.js](/D:/Cloud Kitchen Startup Mode/server.js)
-- Responsive frontend SPA in [public/index.html](/D:/Cloud Kitchen Startup Mode/public/index.html), [public/styles.css](/D:/Cloud Kitchen Startup Mode/public/styles.css), [public/app.js](/D:/Cloud Kitchen Startup Mode/public/app.js)
-- Data JSON files in `server/data`
-- Figma images mapped in `public/assets`
+![Branding](https://img.shields.io/badge/UI-Glassmorphism-brightgreen)
+![Tech](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20PostgreSQL-blue)
+![Realtime](https://img.shields.io/badge/Realtime-SSE-red)
 
-## Run (JSON mode)
+## 🌐 Live Demo
+Experience the platform live: [cloudkitchenstartup.netlify.app](https://cloudkitchenstartup.netlify.app/)
 
-```bash
-npm start
-```
+## 🚀 The Vision
+Most cloud kitchens lose 25-30% revenue to delivery platforms. **Cloud Kitchen Startup Mode** is built to reclaim that margin by providing a high-conversion ordering experience and a professional-grade kitchen management suite. It aims to be the "Shopify for Cloud Kitchens."
 
-Open [http://localhost:3000](http://localhost:3000).
+## ✨ Key Features
 
-Default route now serves a unified landing page with two login paths:
-- Consumer login -> redirects to `/app.html`
-- Admin login -> redirects to `/admin.html`
+### 🛒 Premium Customer Experience
+- **Glassmorphism UI**: A stunning, modern design language that builds brand trust and increases conversion.
+- **Dynamic Menu**: Real-time search, category filtering, and "Today's Special" highlights.
+- **Smart Checkout**: Integrated offer code engine, delivery fee calculation, and automated tax processing.
+- **Live Order Tracking**: Real-time status updates (Confirmed → Preparing → Out for Delivery) powered by **Server-Sent Events (SSE)**.
 
-## Run (PostgreSQL mode)
+### 👨‍🍳 Pro Kitchen Operations (Admin)
+- **Live Kitchen Queue**: A real-time management pane to track every active order without refreshing.
+- **Chef Management System**: Monitor "Kitchen Floor" activity, track chef duty status, and manage workload.
+- **Operations KPIs**: Instant visibility into today's revenue, active orders, and kitchen efficiency.
+- **Support Ticket System**: Integrated threaded communication for handling customer queries effectively.
 
-1. Create `.env` in project root and copy values from [.env.example](/D:/Cloud Kitchen Startup Mode/.env.example):
+### 📊 Business Intelligence & Analytics
+- **Revenue Analytics**: Deep-dive into financial performance with custom date-range scoping.
+- **Product Insights**: Identify top-selling items and high-performing categories.
+- **Customer Analytics**: Track repeat orders and customer lifetime value (LTV) through phone-based tracking.
 
-```env
-PORT=3000
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/cloud_kitchen
-ADMIN_KEY=change-me-in-production
-ADMIN_USERNAME=manager
-ADMIN_PASSWORD=manager123
-```
+## 🛠️ Technical Excellence
+- **Dual-Mode Backend**: Unique architecture supporting both high-performance **PostgreSQL** for production and lightweight **JSON storage** for rapid prototyping.
+- **Real-time Engine**: Built-in SSE implementation for instant push notifications from the kitchen to the customer.
+- **Responsive Architecture**: Fully optimized for mobile-first ordering and desktop-first management.
 
-The app/scripts now auto-load `.env` (no manual PowerShell `$env:` export required).
-2. Run migrations and seed:
+## 💻 Tech Stack
+- **Frontend**: React (SPA), Vanilla CSS (Custom Glassmorphism Framework)
+- **Backend**: Node.js, Express
+- **Database**: PostgreSQL / JSON-based Flat Files
+- **Communication**: Server-Sent Events (SSE) for real-time reactivity
 
-```bash
-npm install
-npm run db:migrate
-npm run db:seed
-```
+## 📸 Screenshots
 
-3. Start Postgres-backed server:
+### 🛍️ Customer Ordering Experience
+A high-conversion, mobile-responsive storefront featuring a modern glassmorphism design.
 
-```bash
-npm run start:db
-```
+````carousel
+![Landing Page](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Customer_Site/landing_page.png)
+<!-- slide -->
+![Menu Discovery](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Customer_Site/menu_page.png)
+<!-- slide -->
+![Daily Specials](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Customer_Site/specials.png)
+<!-- slide -->
+![Smart Cart](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Customer_Site/cart_page.png)
+<!-- slide -->
+![Order Tracking](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Customer_Site/orders_page.png)
+<!-- slide -->
+![Payments](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Customer_Site/payments_page.png)
+````
 
-This mode uses:
-- [server.postgres.js](/D:/Cloud Kitchen Startup Mode/server.postgres.js)
-- [db/migrations/001_init.sql](/D:/Cloud Kitchen Startup Mode/db/migrations/001_init.sql)
-- [db/seeds/001_seed.sql](/D:/Cloud Kitchen Startup Mode/db/seeds/001_seed.sql)
-- [scripts/migrate.js](/D:/Cloud Kitchen Startup Mode/scripts/migrate.js)
-- [scripts/seed.js](/D:/Cloud Kitchen Startup Mode/scripts/seed.js)
+### 👨‍💼 Admin Management Portal
+The command center for kitchen managers, providing deep insights into operations and performance.
 
-## Admin Dashboard (Kitchen Manager)
+````carousel
+![Admin Overview](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Admin_Portal/admin_landing.png)
+<!-- slide -->
+![Deep Analytics](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Admin_Portal/admin_analytics.png)
+<!-- slide -->
+![Order History](file:///d:/Cloud%20Kitchen%20Startup%20Mode/Images/Admin_Portal/admin_pastOrders.png)
+````
 
-- Open [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
-- Login from landing page `/` using `ADMIN_USERNAME` + `ADMIN_PASSWORD`.
-- Features:
-  - Live operations KPIs
-  - Full order queue monitoring
-  - Assign chef to order
-  - Update order status
-  - Chef duty toggle and workload visibility
+## 🛠️ Installation & Setup
 
-## Features
+1. **Clone & Install**:
+   ```bash
+   git clone https://github.com/milansinghal2004/CK-Project.git
+   cd CK-Project
+   npm install
+   ```
 
-- Responsive layout for mobile/tablet/desktop
-- Menu listing with category + search
-- Cart add/update flow connected to backend
-- Offer code application and pricing totals
-- Auth (register/login) via backend APIs
-- Checkout and order placement API
+2. **Configure Environment**:
+   Create a `.env` file based on `.env.example`.
+   ```env
+   PORT=3000
+   DATABASE_URL=your_postgres_url
+   ADMIN_USERNAME=manager
+   ADMIN_PASSWORD=manager123
+   ```
 
-## Production Deploy (Customer + Admin Live)
+3. **Start Development**:
+   - For JSON Mode: `npm start`
+   - For PostgreSQL Mode: `npm run start:db`
 
-Deploy in two parts:
+## 🔮 Future Roadmap
+- [ ] **AI Demand Forecasting**: Predicting order surges using historical data.
+- [ ] **Automated Marketing**: Integrated SMS/WhatsApp marketing for re-engaging past customers.
+- [ ] **Inventory Management**: Automated stock alerts and ingredient level tracking.
+- [ ] **Multi-Outlet Support**: Manage multiple kitchen locations from a single master dashboard.
 
-1. Backend (`server.postgres.js`) on a Node host (Render/Railway/Fly/EC2).
-2. Frontend (landing + customer-react + admin-react) on Netlify.
+## 👤 Author
+**Milan Singhal** — [GitHub](https://github.com/milansinghal2004)
 
-### 1) Deploy Backend
+---
 
-- Start command: `npm run start:db`
-- Required env vars:
-  - `DATABASE_URL`
-  - `ADMIN_KEY`
-  - `ADMIN_USERNAME`
-  - `ADMIN_PASSWORD`
-  - `PAYMENT_PROVIDER`
-  - `PAYMENT_CURRENCY`
-  - `UPI_RECEIVER_VPA`
-  - `UPI_RECEIVER_NAME`
-- Keep `PORT` managed by the host (Render/Railway auto-provides it).
-
-After deploy, copy your backend public URL (example: `https://ck-backend.onrender.com`).
-
-### 2) Deploy Frontend on Netlify
-
-This repo includes [netlify.toml](/D:/Cloud Kitchen Startup Mode/netlify.toml) configured to:
-- build both React apps
-- publish from `public`
-- support SPA routing for `/customer-react/*` and `/admin-react/*`
-- proxy `/api/*` and `/assets/*` to backend
-
-Before deploying, edit [netlify.toml](/D:/Cloud Kitchen Startup Mode/netlify.toml) and replace:
-- `https://YOUR-BACKEND-DOMAIN` with your real backend URL
-
-Then push and redeploy.
-
-### 3) Netlify Build Settings
-
-- Build command: from `netlify.toml` (no manual override needed)
-- Publish directory: from `netlify.toml` (no manual override needed)
-
-Optional (recommended):
-- Set `VITE_API_BASE` in Netlify env to your backend URL. Both React apps can use it directly.
-
-### 4) Go-Live URLs
-
-- Landing: `https://<your-netlify-site>/`
-- Customer app: `https://<your-netlify-site>/customer-react/`
-- Admin app: `https://<your-netlify-site>/admin-react/`
+### Searchable Keywords (SEO)
+`Cloud Kitchen Management System`, `Direct-to-Consumer Food Delivery`, `Restaurant Admin Dashboard`, `Real-time Order Tracking`, `React Food App`, `Kitchen Operations Software`, `Chef Management System`, `Online Food Ordering Flow`, `Glassmorphism UI Design`, `Food Tech Platform`, `Restaurant Analytics Software`, `Independent Kitchen Software`, `D2C Restaurant Tech`, `Ghost Kitchen Management`, `SaaS for Food Startups`.
