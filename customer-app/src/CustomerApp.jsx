@@ -2347,7 +2347,21 @@ function CartBody({ cart, apiBase, updateQty, clearCart, offerCode, setOfferCode
 function OrderCard({ order, onDetails, onCancel, onReorder, onPay, highlightType, apiBase }) {
   const itemCount = (order.items || []).reduce((sum, i) => sum + Number(i.quantity || 0), 0);
   const statusClass = order.status === "Delivered" ? "done" : order.status === "Cancelled" ? "cancel" : "live";
-  const cls = `order-card-sq ${highlightType ? `updated-${highlightType}` : ""} status-${statusClass}`;
+  
+  // Calculate Tint
+  let tint = "";
+  const s = String(order.status || "").toLowerCase();
+  const p = String(order.paymentStatus || "").toLowerCase();
+  
+  if (s === "cancelled" || p === "refunded") {
+    tint = "tint-red";
+  } else if (s === "delivered" && p === "paid") {
+    tint = "tint-green";
+  } else if (s === "delivered" && p !== "paid") {
+    tint = "tint-orange";
+  }
+
+  const cls = `order-card-sq ${highlightType ? `updated-${highlightType}` : ""} status-${statusClass} ${tint}`;
   const canPay = order.paymentStatus === "Pending" && needsOnlinePayment(order.paymentMode);
   
   const dateStr = new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });

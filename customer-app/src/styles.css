@@ -2285,9 +2285,20 @@ dialog::backdrop {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
-.order-card-sq.status-cancel {
-  background: #f8fafc;
-  border-color: rgba(0, 0, 0, 0.03);
+.order-card-sq.status-cancel,
+.order-card-sq.tint-red {
+  background: #fffafa;
+  border-color: rgba(254, 226, 226, 0.5);
+}
+
+.order-card-sq.tint-green {
+  background: #f0fdf4;
+  border-color: rgba(187, 247, 208, 0.4);
+}
+
+.order-card-sq.tint-orange {
+  background: #fffbeb;
+  border-color: rgba(254, 243, 199, 0.6);
 }
 
 .order-card-sq:hover {
