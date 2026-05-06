@@ -5,7 +5,7 @@
 A modern, full-stack **Direct-to-Consumer (D2C)** food technology platform designed to empower independent **cloud kitchens**. Reclaim your margins by replacing third-party dependencies with a premium, self-hosted ordering system and a robust **restaurant management suite**.
 
 > **Production-ready** full-stack platform featuring a high-conversion customer ordering website and an advanced Admin/Manager portal to manage chefs, orders, payments, and business analytics in one unified system.
-
+ 
 ### 🌟 Key Highlights
 
 - **Direct-to-Consumer (D2C)**: Reclaim 25-30% revenue lost to delivery platforms.
